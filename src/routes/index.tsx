@@ -199,6 +199,15 @@ function Hero() {
               <a href="#contact" className="border border-ink bg-ink px-5 py-3 text-sm font-medium text-paper transition hover:bg-primary hover:border-primary">
                 Say hi →
               </a>
+              <a
+                href="/resume.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Open Soham Siddhartha Mishra's resume in a new tab"
+                className="border border-ink px-5 py-3 text-sm font-medium transition hover:bg-ink hover:text-paper"
+              >
+                Resume
+              </a>
               <a href="#work" className="border border-ink px-5 py-3 text-sm font-medium transition hover:bg-ink hover:text-paper">
                 See the work
               </a>
