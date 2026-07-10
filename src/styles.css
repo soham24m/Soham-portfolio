@@ -40,16 +40,25 @@
 }
 
 @layer base {
-  * { border-color: var(--rule); }
-  html, body {
+  * {
+    border-color: var(--rule);
+  }
+  html,
+  body {
     background: var(--background);
     color: var(--ink);
     font-family: var(--font-sans);
     font-feature-settings: "ss01", "cv11";
     -webkit-font-smoothing: antialiased;
   }
-  ::selection { background: var(--ink); color: var(--paper); }
-  :focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+  ::selection {
+    background: var(--ink);
+    color: var(--paper);
+  }
+  :focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 3px;
+  }
 }
 
 @utility label-mono {
@@ -67,16 +76,221 @@
   line-height: 0.92;
 }
 
-@utility rule-t { border-top: 1px solid var(--rule); }
-@utility rule-b { border-bottom: 1px solid var(--rule); }
+@utility rule-t {
+  border-top: 1px solid var(--rule);
+}
+@utility rule-b {
+  border-bottom: 1px solid var(--rule);
+}
 
 @keyframes float-slow {
-  0%, 100% { transform: translateY(0) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(2deg); }
+  0%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-10px) rotate(2deg);
+  }
 }
 @keyframes draw {
-  from { stroke-dashoffset: 800; }
-  to { stroke-dashoffset: 0; }
+  from {
+    stroke-dashoffset: 800;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
 }
-.float-slow { animation: float-slow 6s ease-in-out infinite; }
-.draw-arrow path { stroke-dasharray: 800; animation: draw 1.6s ease-out forwards; }
+.float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+.draw-arrow path {
+  stroke-dasharray: 800;
+  animation: draw 1.6s ease-out forwards;
+}
+
+/* Interaction layer: these effects only affect composited properties. */
+html {
+  scroll-behavior: auto;
+}
+body {
+  overflow-x: hidden;
+}
+.hero-char {
+  display: inline-block;
+  will-change: transform, opacity;
+}
+.scene-surface {
+  isolation: isolate;
+}
+.cinematic-scene {
+  min-height: 100svh;
+  overflow: clip;
+  transform-style: preserve-3d;
+  backface-visibility: hidden;
+  will-change: transform, clip-path, filter, opacity;
+}
+@supports (
+  (mask-image: linear-gradient(#000, #000)) or (-webkit-mask-image: linear-gradient(#000, #000))
+) {
+  .cinematic-scene {
+    -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 96%, transparent 100%);
+    mask-image: linear-gradient(to bottom, #000 0%, #000 96%, transparent 100%);
+  }
+}
+.scene-surface::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  opacity: 0.35;
+  pointer-events: none;
+  background-image: linear-gradient(
+    120deg,
+    transparent 35%,
+    color-mix(in oklch, var(--primary) 5%, transparent) 50%,
+    transparent 65%
+  );
+  background-size: 200% 100%;
+  animation: paper-shift 18s ease-in-out infinite alternate;
+}
+.project-card {
+  isolation: isolate;
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition:
+    background-color 350ms ease,
+    border-color 350ms ease;
+}
+.project-card::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    360px circle at var(--pointer-x, 50%) var(--pointer-y, 50%),
+    color-mix(in oklch, var(--primary) 11%, transparent),
+    transparent 55%
+  );
+  transition: opacity 350ms ease;
+}
+.project-card::after {
+  position: absolute;
+  inset: -1px;
+  z-index: 1;
+  content: "";
+  pointer-events: none;
+  border: 1px solid transparent;
+  opacity: 0;
+  transition:
+    opacity 350ms ease,
+    border-color 350ms ease;
+}
+.project-card:hover::before,
+.project-card:hover::after {
+  opacity: 1;
+}
+.project-card:hover::after {
+  border-color: color-mix(in oklch, var(--primary) 55%, var(--rule));
+}
+.project-card > * {
+  transform: translateZ(10px);
+  transition: transform 350ms ease;
+}
+.project-card:hover > * {
+  transform: translate3d(0, -3px, 18px);
+}
+.timeline-track {
+  --timeline-progress: 0%;
+  position: relative;
+}
+.timeline-track::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 1px;
+  content: "";
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    var(--primary) var(--timeline-progress),
+    transparent var(--timeline-progress)
+  );
+}
+.timeline-track > * {
+  position: relative;
+}
+.timeline-track > *::before {
+  position: absolute;
+  top: 2rem;
+  left: -3px;
+  width: 7px;
+  height: 7px;
+  content: "";
+  border-radius: 50%;
+  background: var(--primary);
+}
+.cursor-orbit {
+  position: fixed;
+  z-index: 100;
+  top: -12px;
+  left: -12px;
+  width: 24px;
+  height: 24px;
+  pointer-events: none;
+  border: 1px solid var(--primary);
+  border-radius: 50%;
+  mix-blend-mode: multiply;
+  will-change: transform;
+  transition:
+    width 220ms ease,
+    height 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease;
+}
+.cursor-orbit.is-active {
+  width: 42px;
+  height: 42px;
+  background: color-mix(in oklch, var(--primary) 13%, transparent);
+  border-color: var(--ink);
+}
+a,
+button {
+  transition:
+    transform 220ms ease,
+    color 220ms ease,
+    background-color 220ms ease,
+    border-color 220ms ease;
+}
+@keyframes paper-shift {
+  from {
+    background-position: 100% 0;
+  }
+  to {
+    background-position: 0 0;
+  }
+}
+@media (pointer: fine) {
+  html {
+    cursor: none;
+  }
+  a,
+  button {
+    cursor: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .cursor-orbit {
+    display: none;
+  }
+}

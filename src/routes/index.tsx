@@ -1,5 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
+import Lenis from "lenis";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { motion, useReducedMotion } from "framer-motion";
 import heroPhoto from "@/assets/portfolio/hero-photo.png";
 import thinkingPhoto from "@/assets/portfolio/thinking-photo.png";
 import closingPhoto from "@/assets/portfolio/closing-photo-new.png";
@@ -15,50 +19,27 @@ export const Route = createFileRoute("/")({
   component: Portfolio,
 });
 
-// ————————————————————— hooks & primitives —————————————————————
+gsap.registerPlugin(ScrollTrigger);
 
-function useReveal<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null);
-  const [shown, setShown] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const io = new IntersectionObserver(
-      (entries) => entries.forEach((e) => e.isIntersecting && setShown(true)),
-      { threshold: 0.15 },
-    );
-    io.observe(el);
-    return () => io.disconnect();
-  }, []);
-  return { ref, shown };
-}
+// ————————————————————— hooks & primitives —————————————————————
 
 function Reveal({
   children,
-  delay = 0,
-  as: As = "div",
-  className = "",
+  delay: _delay = 0,
+  as: _as = "div",
+  className: _className = "",
 }: {
   children: React.ReactNode;
   delay?: number;
   as?: React.ElementType;
   className?: string;
 }) {
-  const { ref, shown } = useReveal<HTMLDivElement>();
-  return (
-    <As
-      ref={ref}
-      style={{ transitionDelay: `${delay}ms` }}
-      className={`transition-all duration-[900ms] ease-out ${shown ? "opacity-100 translate-y-0" : "opacity-0 translate-y-6"} ${className}`}
-    >
-      {children}
-    </As>
-  );
+  return <>{children}</>;
 }
 
 function SectionLabel({ n, children }: { n: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center gap-3 label-mono">
+    <div data-section-label className="flex items-center gap-3 label-mono">
       <span>{n}</span>
       <span className="h-px w-8 bg-rule" />
       <span>{children}</span>
@@ -82,11 +63,302 @@ function DashedArrow({ className = "", d }: { className?: string; d: string }) {
   );
 }
 
+function MotionExperience() {
+  const cursor = useRef<HTMLDivElement | null>(null);
+  const reduceMotion = useReducedMotion();
+
+  useEffect(() => {
+    if (reduceMotion || window.matchMedia("(pointer: coarse)").matches) return;
+
+    const lenis = new Lenis({ lerp: 0.085, smoothWheel: true, wheelMultiplier: 0.9 });
+    let frame = 0;
+    const onFrame = (time: number) => {
+      lenis.raf(time);
+      frame = requestAnimationFrame(onFrame);
+    };
+    frame = requestAnimationFrame(onFrame);
+
+    const cursorX = cursor.current
+      ? gsap.quickTo(cursor.current, "x", { duration: 0.22, ease: "power3.out" })
+      : null;
+    const cursorY = cursor.current
+      ? gsap.quickTo(cursor.current, "y", { duration: 0.22, ease: "power3.out" })
+      : null;
+    const onPointerMove = (event: PointerEvent) => {
+      cursorX?.(event.clientX);
+      cursorY?.(event.clientY);
+    };
+    window.addEventListener("pointermove", onPointerMove, { passive: true });
+
+    const context = gsap.context(() => {
+      const intro = gsap.timeline({ defaults: { ease: "power4.out" } });
+      intro
+        .from("[data-hero-label]", { y: 14, autoAlpha: 0, duration: 0.6 })
+        .from("[data-hero-greeting]", { y: 22, autoAlpha: 0, duration: 0.7 }, "-=0.35")
+        .from(
+          "[data-hero-name] .hero-char",
+          { yPercent: 115, rotate: 3, autoAlpha: 0, stagger: 0.055, duration: 0.85 },
+          "-=0.55",
+        )
+        .from(
+          "[data-hero-visual]",
+          { y: 56, rotate: 2, scale: 0.94, autoAlpha: 0, duration: 1 },
+          "-=0.6",
+        )
+        .from(
+          "[data-hero-copy] > *",
+          { y: 18, autoAlpha: 0, stagger: 0.12, duration: 0.65 },
+          "-=0.55",
+        )
+        .from("[data-hero-cta]", { y: 14, autoAlpha: 0, stagger: 0.1, duration: 0.5 }, "-=0.35");
+
+      gsap.to("[data-hero-layer='hand']", {
+        yPercent: -12,
+        rotate: -4,
+        ease: "none",
+        scrollTrigger: { trigger: "#top", start: "top top", end: "bottom top", scrub: 0.8 },
+      });
+      gsap.to("[data-hero-layer='portrait']", {
+        yPercent: 10,
+        scale: 1.07,
+        ease: "none",
+        scrollTrigger: { trigger: "#top", start: "top top", end: "bottom top", scrub: 0.8 },
+      });
+      gsap.to("[data-hero-name]", {
+        yPercent: -18,
+        ease: "none",
+        scrollTrigger: { trigger: "#top", start: "top top", end: "bottom top", scrub: true },
+      });
+
+      const scenes = gsap.utils.toArray<HTMLElement>("[data-scene]");
+      const transitions = [
+        {
+          outgoing: { scale: 0.85, rotateX: 9, z: -180, filter: "blur(12px)", autoAlpha: 0 },
+          incoming: { scale: 1.05, rotateY: -5, clipPath: "inset(0 0 0% 0)", filter: "blur(0px)" },
+          initial: {
+            scale: 1.05,
+            rotateY: -5,
+            clipPath: "inset(0 0 100% 0)",
+            filter: "blur(12px)",
+          },
+        },
+        {
+          outgoing: { scale: 1.12, rotateY: 8, z: -120, filter: "blur(8px)", autoAlpha: 0 },
+          incoming: {
+            scale: 1,
+            rotateX: 0,
+            clipPath: "polygon(0 0, 100% 0, 100% 100%, 0 100%)",
+            filter: "blur(0px)",
+          },
+          initial: {
+            scale: 0.9,
+            rotateX: -10,
+            clipPath: "polygon(0 100%, 100% 100%, 100% 100%, 0 100%)",
+            filter: "blur(10px)",
+          },
+        },
+        {
+          outgoing: { scale: 0.9, rotateZ: -2, z: -100, filter: "blur(10px)", autoAlpha: 0 },
+          incoming: {
+            scale: 1,
+            rotateZ: 0,
+            clipPath: "inset(0 0 0 0 round 0px)",
+            filter: "blur(0px)",
+          },
+          initial: {
+            scale: 1.12,
+            rotateZ: 2,
+            clipPath: "inset(12% 8% 12% 8% round 40px)",
+            filter: "blur(9px)",
+          },
+        },
+        {
+          outgoing: { scale: 0.82, rotateX: -8, z: -200, filter: "blur(14px)", autoAlpha: 0 },
+          incoming: {
+            scale: 1,
+            rotateY: 0,
+            clipPath: "circle(150% at 50% 50%)",
+            filter: "blur(0px)",
+          },
+          initial: {
+            scale: 1.08,
+            rotateY: 7,
+            clipPath: "circle(0% at 50% 50%)",
+            filter: "blur(12px)",
+          },
+        },
+        {
+          outgoing: { scale: 1.08, rotateY: -7, z: -150, filter: "blur(9px)", autoAlpha: 0 },
+          incoming: { scale: 1, rotateX: 0, clipPath: "inset(0 0 0 0)", filter: "blur(0px)" },
+          initial: { scale: 0.88, rotateX: 9, clipPath: "inset(0 0 100% 0)", filter: "blur(11px)" },
+        },
+      ];
+
+      scenes.forEach((scene, index) => {
+        const next = scenes[index + 1];
+        if (!next) {
+          ScrollTrigger.create({
+            trigger: scene,
+            start: "top top",
+            end: "+=45%",
+            pin: true,
+            anticipatePin: 1,
+          });
+          return;
+        }
+        const transition = transitions[index % transitions.length];
+        const nextLayers = next.querySelectorAll<HTMLElement>(
+          "[data-parallax], [data-scene-heading], [data-section-label]",
+        );
+        gsap.set(next, {
+          ...transition.initial,
+          transformPerspective: 1400,
+          transformOrigin: "50% 50%",
+        });
+        gsap.set(nextLayers, { z: -60, transformPerspective: 1400 });
+
+        const timeline = gsap.timeline({
+          defaults: { ease: "none" },
+          scrollTrigger: {
+            trigger: scene,
+            start: "top top",
+            endTrigger: next,
+            end: "top top",
+            scrub: 0.9,
+            pin: scene,
+            pinSpacing: false,
+            anticipatePin: 1,
+            invalidateOnRefresh: true,
+          },
+        });
+        timeline
+          .to(scene, transition.outgoing, 0)
+          .to(next, { y: () => -scene.offsetHeight, ...transition.incoming }, 0)
+          .to(nextLayers, { z: 0, yPercent: 0, stagger: 0.025 }, 0.1)
+          .to(
+            scene.querySelectorAll("[data-parallax]"),
+            { yPercent: -18, z: -100, stagger: 0.03 },
+            0,
+          );
+      });
+
+      const timeline = document.querySelector<HTMLElement>("[data-timeline]");
+      if (timeline) {
+        gsap.fromTo(
+          timeline,
+          { "--timeline-progress": "0%" },
+          {
+            "--timeline-progress": "100%",
+            ease: "none",
+            scrollTrigger: { trigger: timeline, start: "top 75%", end: "bottom 70%", scrub: 0.8 },
+          },
+        );
+      }
+
+      gsap.utils.toArray<HTMLElement>("[data-parallax]").forEach((item) => {
+        const amount = Number(item.dataset.parallax || 10);
+        gsap.to(item, {
+          yPercent: -amount,
+          ease: "none",
+          scrollTrigger: {
+            trigger: item.closest("section") ?? item,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+      });
+    });
+
+    const interactive = Array.from(
+      document.querySelectorAll<HTMLElement>("a, button, [data-project-card]"),
+    );
+    const hoverOn = () => cursor.current?.classList.add("is-active");
+    const hoverOff = () => cursor.current?.classList.remove("is-active");
+    interactive.forEach((item) => {
+      item.addEventListener("pointerenter", hoverOn);
+      item.addEventListener("pointerleave", hoverOff);
+    });
+
+    const magneticItems = Array.from(document.querySelectorAll<HTMLElement>("a, button"));
+    const magneticHandlers = magneticItems.map((item) => {
+      const onMove = (event: PointerEvent) => {
+        const bounds = item.getBoundingClientRect();
+        gsap.to(item, {
+          x: (event.clientX - bounds.left - bounds.width / 2) * 0.12,
+          y: (event.clientY - bounds.top - bounds.height / 2) * 0.12,
+          duration: 0.35,
+          ease: "power2.out",
+          overwrite: true,
+        });
+      };
+      const onLeave = () =>
+        gsap.to(item, { x: 0, y: 0, duration: 0.7, ease: "elastic.out(1, 0.45)" });
+      item.addEventListener("pointermove", onMove);
+      item.addEventListener("pointerleave", onLeave);
+      return { item, onMove, onLeave };
+    });
+
+    const cards = Array.from(document.querySelectorAll<HTMLElement>("[data-project-card]"));
+    const tiltCards = cards.map((card) => {
+      const onMove = (event: PointerEvent) => {
+        const bounds = card.getBoundingClientRect();
+        const x = (event.clientX - bounds.left) / bounds.width;
+        const y = (event.clientY - bounds.top) / bounds.height;
+        card.style.setProperty("--pointer-x", `${x * 100}%`);
+        card.style.setProperty("--pointer-y", `${y * 100}%`);
+        gsap.to(card, {
+          rotateX: (0.5 - y) * 5,
+          rotateY: (x - 0.5) * 5,
+          duration: 0.35,
+          ease: "power2.out",
+          overwrite: true,
+        });
+      };
+      const onLeave = () =>
+        gsap.to(card, { rotateX: 0, rotateY: 0, duration: 0.7, ease: "power3.out" });
+      card.addEventListener("pointermove", onMove);
+      card.addEventListener("pointerleave", onLeave);
+      return { card, onMove, onLeave };
+    });
+
+    return () => {
+      cancelAnimationFrame(frame);
+      lenis.destroy();
+      context.revert();
+      window.removeEventListener("pointermove", onPointerMove);
+      interactive.forEach((item) => {
+        item.removeEventListener("pointerenter", hoverOn);
+        item.removeEventListener("pointerleave", hoverOff);
+      });
+      magneticHandlers.forEach(({ item, onMove, onLeave }) => {
+        item.removeEventListener("pointermove", onMove);
+        item.removeEventListener("pointerleave", onLeave);
+      });
+      tiltCards.forEach(({ card, onMove, onLeave }) => {
+        card.removeEventListener("pointermove", onMove);
+        card.removeEventListener("pointerleave", onLeave);
+      });
+    };
+  }, [reduceMotion]);
+
+  return (
+    <motion.div
+      ref={cursor}
+      className="cursor-orbit"
+      aria-hidden
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+    />
+  );
+}
+
 // ————————————————————— page —————————————————————
 
 function Portfolio() {
   return (
     <main className="min-h-screen bg-background text-ink">
+      <MotionExperience />
       <TopBar />
       <Hero />
       <SayHi />
@@ -106,15 +378,30 @@ function TopBar() {
   return (
     <header className="rule-b sticky top-0 z-30 bg-background/95 backdrop-blur-[2px]">
       <div className="mx-auto flex max-w-[1400px] items-center justify-between px-6 py-4 sm:px-10">
-        <a href="#top" className="label-mono text-ink">SSM · Portfolio · MMXXVI</a>
+        <a href="#top" className="label-mono text-ink">
+          SSM · Portfolio · MMXXVI
+        </a>
         <nav className="hidden gap-8 label-mono md:flex">
-          <a href="#work" className="hover:text-primary">Work</a>
-          <a href="#journey" className="hover:text-primary">Journey</a>
-          <a href="#skills" className="hover:text-primary">Skills</a>
-          <a href="#leadership" className="hover:text-primary">Leadership</a>
-          <a href="#contact" className="hover:text-primary">Contact</a>
+          <a href="#work" className="hover:text-primary">
+            Work
+          </a>
+          <a href="#journey" className="hover:text-primary">
+            Journey
+          </a>
+          <a href="#skills" className="hover:text-primary">
+            Skills
+          </a>
+          <a href="#leadership" className="hover:text-primary">
+            Leadership
+          </a>
+          <a href="#contact" className="hover:text-primary">
+            Contact
+          </a>
         </nav>
-        <a href="mailto:sohamsiddhartham@icloud.com" className="label-mono text-primary hover:underline">
+        <a
+          href="mailto:sohamsiddhartham@icloud.com"
+          className="label-mono text-primary hover:underline"
+        >
           Open to work →
         </a>
       </div>
@@ -125,27 +412,41 @@ function TopBar() {
 // —————— Hero ——————
 function Hero() {
   return (
-    <section id="top" className="rule-b relative overflow-hidden">
+    <section
+      id="top"
+      data-scene
+      className="rule-b scene-surface cinematic-scene relative overflow-hidden"
+    >
       <div className="mx-auto max-w-[1400px] px-6 pb-16 pt-14 sm:px-10 lg:pb-24 lg:pt-20">
-        <SectionLabel n="00 / Intro">Ranchi → Chennai</SectionLabel>
+        <div data-hero-label>
+          <SectionLabel n="00 / Intro">Ranchi → Chennai</SectionLabel>
+        </div>
 
         {/* Big centered heading at the very top */}
         <div className="mt-10 text-center">
-          <div className="mb-2 flex flex-col items-center leading-none">
-            <span className="font-script text-2xl text-primary sm:text-3xl lg:text-4xl">Hey there,</span>
+          <div data-hero-greeting className="mb-2 flex flex-col items-center leading-none">
+            <span className="font-script text-2xl text-primary sm:text-3xl lg:text-4xl">
+              Hey there,
+            </span>
             <span className="font-script text-2xl text-primary sm:text-3xl lg:text-4xl">I'm</span>
           </div>
           <h1
+            data-hero-name
+            aria-label="Soham"
             className="display-serif w-full font-black uppercase tracking-[-0.04em] leading-[0.82] text-ink"
             style={{ fontSize: "clamp(3.5rem, 16vw, 14rem)" }}
           >
-            SOHAM
+            {"SOHAM".split("").map((letter) => (
+              <span key={letter} aria-hidden className="hero-char">
+                {letter}
+              </span>
+            ))}
           </h1>
         </div>
 
         <div className="relative mt-10 flex items-center justify-between gap-6">
           {/* Peace hand — huge, extreme left */}
-          <div className="relative flex-shrink-0">
+          <div data-hero-layer="hand" className="relative flex-shrink-0">
             <img
               src={peaceHand}
               alt=""
@@ -155,7 +456,7 @@ function Hero() {
           </div>
 
           {/* Hero photo — extreme right, boxed with caption */}
-          <div className="relative flex-shrink-0">
+          <div data-hero-layer="portrait" data-hero-visual className="relative flex-shrink-0">
             <div className="relative mx-auto max-w-md lg:max-w-none">
               <div className="rule-t rule-b border-x border-rule bg-muted/40 p-4">
                 <img
@@ -180,11 +481,12 @@ function Hero() {
         </div>
 
         <div className="mt-10 grid grid-cols-1 gap-10 lg:grid-cols-12">
-          <div className="lg:col-span-12">
+          <div data-hero-copy className="lg:col-span-12">
             <div className="grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-[auto_1fr] sm:items-start">
               <div className="label-mono">Role</div>
               <p className="font-display text-2xl leading-tight sm:text-3xl">
-                AI Engineer <span className="text-muted-foreground">&amp;</span> Full-Stack Developer.
+                AI Engineer <span className="text-muted-foreground">&amp;</span> Full-Stack
+                Developer.
               </p>
               <div className="label-mono">Status</div>
               <p className="text-lg">
@@ -196,10 +498,15 @@ function Hero() {
             </div>
 
             <div className="mt-10 flex flex-wrap gap-4">
-              <a href="#contact" className="border border-ink bg-ink px-5 py-3 text-sm font-medium text-paper transition hover:bg-primary hover:border-primary">
+              <a
+                data-hero-cta
+                href="#contact"
+                className="border border-ink bg-ink px-5 py-3 text-sm font-medium text-paper transition hover:bg-primary hover:border-primary"
+              >
                 Say hi →
               </a>
               <a
+                data-hero-cta
                 href="/resume.pdf"
                 target="_blank"
                 rel="noopener noreferrer"
@@ -208,7 +515,11 @@ function Hero() {
               >
                 Resume
               </a>
-              <a href="#work" className="border border-ink px-5 py-3 text-sm font-medium transition hover:bg-ink hover:text-paper">
+              <a
+                data-hero-cta
+                href="#work"
+                className="border border-ink px-5 py-3 text-sm font-medium transition hover:bg-ink hover:text-paper"
+              >
                 See the work
               </a>
             </div>
@@ -218,8 +529,14 @@ function Hero() {
 
       <div className="rule-t">
         <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-10 gap-y-2 px-6 py-3 label-mono sm:px-10">
-          <span>Java</span><span>C++</span><span>Python</span><span>React</span><span>Node</span>
-          <span>TensorFlow</span><span>MongoDB</span><span>Docker</span>
+          <span>Java</span>
+          <span>C++</span>
+          <span>Python</span>
+          <span>React</span>
+          <span>Node</span>
+          <span>TensorFlow</span>
+          <span>MongoDB</span>
+          <span>Docker</span>
           <span className="ml-auto text-primary">GPA 9.9 / 10</span>
         </div>
       </div>
@@ -230,18 +547,26 @@ function Hero() {
 // —————— Say Hi / Contact ——————
 function SayHi() {
   const contacts = [
-    { label: "Email", value: "sohamsiddhartham@icloud.com", href: "mailto:sohamsiddhartham@icloud.com" },
+    {
+      label: "Email",
+      value: "sohamsiddhartham@icloud.com",
+      href: "mailto:sohamsiddhartham@icloud.com",
+    },
     { label: "Phone", value: "+91 82358 21666", href: "tel:+918235821666" },
-    { label: "LinkedIn", value: "in/soham-siddhartha-mishra", href: "https://www.linkedin.com/in/soham-siddhartha-mishra-ba1aa822a/" },
+    {
+      label: "LinkedIn",
+      value: "in/soham-siddhartha-mishra",
+      href: "https://www.linkedin.com/in/soham-siddhartha-mishra-ba1aa822a/",
+    },
     { label: "GitHub", value: "@soham24m", href: "https://github.com/soham24m" },
   ];
   return (
-    <section id="contact" className="rule-b relative">
+    <section id="contact" data-scene className="rule-b scene-surface cinematic-scene relative">
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-12 px-6 py-20 sm:px-10 lg:grid-cols-12">
         <div className="lg:col-span-7">
           <SectionLabel n="01 / Contact">Say hi</SectionLabel>
           <Reveal>
-            <h2 className="display-serif mt-6 text-6xl sm:text-7xl lg:text-8xl">
+            <h2 data-scene-heading className="display-serif mt-6 text-6xl sm:text-7xl lg:text-8xl">
               Say hi, <br />
               <em className="font-script not-italic text-primary">let's build</em> <br />
               something.
@@ -259,7 +584,9 @@ function SayHi() {
               >
                 <span className="label-mono w-28">{c.label}</span>
                 <span className="flex-1 font-display text-xl sm:text-2xl">{c.value}</span>
-                <span className="label-mono text-primary opacity-60 transition group-hover:opacity-100">→</span>
+                <span className="label-mono text-primary opacity-60 transition group-hover:opacity-100">
+                  →
+                </span>
               </a>
             ))}
           </div>
@@ -267,7 +594,13 @@ function SayHi() {
 
         <div className="relative lg:col-span-5">
           <div className="relative mx-auto max-w-sm">
-            <img src={bust} alt="" aria-hidden className="float-slow mx-auto block w-full" />
+            <img
+              src={bust}
+              alt=""
+              aria-hidden
+              data-parallax="8"
+              className="float-slow mx-auto block w-full"
+            />
             <DashedArrow
               className="left-[-40px] top-[20%] hidden h-40 w-40 text-ink lg:block"
               d="M10 20 C 60 40, 90 80, 160 100"
@@ -312,26 +645,32 @@ function WhyHire() {
     },
   ];
   return (
-    <section className="rule-b relative">
+    <section data-scene className="rule-b scene-surface cinematic-scene relative">
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
           <div className="lg:col-span-5">
             <SectionLabel n="02 / Pitch">The case</SectionLabel>
             <div className="relative mt-6">
-              <h2 className="display-serif text-5xl sm:text-6xl lg:text-7xl">
+              <h2 data-scene-heading className="display-serif text-5xl sm:text-6xl lg:text-7xl">
                 Why should <br /> you hire me?
               </h2>
               <img
                 src={questionMark}
                 alt=""
                 aria-hidden
+                data-parallax="18"
                 className="float-slow absolute -right-4 -top-10 w-28 sm:w-36 lg:-right-8 lg:-top-16 lg:w-44"
               />
             </div>
             <div className="mt-10 border border-rule bg-muted/40 p-4">
-              <img src={thinkingPhoto} alt="Soham thinking" className="mx-auto block w-full max-w-sm" />
+              <img
+                src={thinkingPhoto}
+                alt="Soham thinking"
+                className="mx-auto block w-full max-w-sm"
+              />
               <div className="mt-3 flex justify-between label-mono">
-                <span>Fig. 02</span><span>In thought</span>
+                <span>Fig. 02</span>
+                <span>In thought</span>
               </div>
             </div>
           </div>
@@ -379,31 +718,46 @@ function Projects() {
         { label: "Live", href: "#" },
       ],
     },
-    { title: "In progress", year: "—", tag: "Reserved", desc: "// TODO: add project (title, description, tech stack, links).", stack: [], links: [] },
-    { title: "In progress", year: "—", tag: "Reserved", desc: "// TODO: add project (title, description, tech stack, links).", stack: [], links: [] },
+    {
+      title: "In progress",
+      year: "—",
+      tag: "Reserved",
+      desc: "// TODO: add project (title, description, tech stack, links).",
+      stack: [],
+      links: [],
+    },
+    {
+      title: "In progress",
+      year: "—",
+      tag: "Reserved",
+      desc: "// TODO: add project (title, description, tech stack, links).",
+      stack: [],
+      links: [],
+    },
   ];
 
   return (
-    <section id="work" className="rule-b">
+    <section id="work" data-scene className="rule-b scene-surface cinematic-scene">
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="flex-1">
             <SectionLabel n="03 / Work">Selected projects</SectionLabel>
             <div className="relative mt-4 flex items-end justify-between gap-6">
-              <h2 className="display-serif text-5xl sm:text-6xl lg:text-7xl">
+              <h2 data-scene-heading className="display-serif text-5xl sm:text-6xl lg:text-7xl">
                 Have a look at <br /> my projects.
               </h2>
-             <img
-  src={pointHand}
-  alt=""
-  aria-hidden
-  className="hidden self-end sm:block"
-  style={{
-    height: "clamp(11rem, 22vw, 22rem)",
-    width: "auto",
-    transform: "scaleX(-1) rotate(12deg)",
-  }}
-/>
+              <img
+                src={pointHand}
+                alt=""
+                aria-hidden
+                data-parallax="12"
+                className="hidden self-end sm:block"
+                style={{
+                  height: "clamp(11rem, 22vw, 22rem)",
+                  width: "auto",
+                  transform: "scaleX(-1) rotate(12deg)",
+                }}
+              />
             </div>
           </div>
         </div>
@@ -414,26 +768,34 @@ function Projects() {
             return (
               <Reveal key={i} delay={i * 80}>
                 <article
-                  className={`rule-b group relative flex h-full flex-col p-8 transition ${
+                  data-project-card
+                  className={`rule-b project-card group relative flex h-full flex-col p-8 transition ${
                     i % 2 === 0 ? "md:border-r" : ""
                   } ${isPlaceholder ? "bg-muted/30" : "hover:bg-muted/40"}`}
                 >
                   <div className="flex items-center justify-between label-mono">
-                    <span>{p.tag}</span><span>{p.year}</span>
+                    <span>{p.tag}</span>
+                    <span>{p.year}</span>
                   </div>
                   <h3 className="display-serif mt-6 text-4xl sm:text-5xl">{p.title}</h3>
                   <p className="mt-4 max-w-md text-muted-foreground">{p.desc}</p>
                   {p.stack.length > 0 && (
                     <ul className="mt-6 flex flex-wrap gap-2">
                       {p.stack.map((s) => (
-                        <li key={s} className="border border-rule px-2 py-1 label-mono">{s}</li>
+                        <li key={s} className="border border-rule px-2 py-1 label-mono">
+                          {s}
+                        </li>
                       ))}
                     </ul>
                   )}
                   {p.links.length > 0 && (
                     <div className="mt-8 flex gap-4">
                       {p.links.map((l) => (
-                        <a key={l.label} href={l.href} className="label-mono text-primary hover:underline">
+                        <a
+                          key={l.label}
+                          href={l.href}
+                          className="label-mono text-primary hover:underline"
+                        >
                           {l.label} →
                         </a>
                       ))}
@@ -452,14 +814,34 @@ function Projects() {
 // —————— Journey ——————
 function Journey() {
   const items = [
-    { date: "Aug 2025 → present", h: "B.Tech Computer Science, SRM Institute of Science and Technology", b: "GPA 9.9 / 10. Core focus: DSA, systems, ML." },
-    { date: "2025", h: "JEE Main — top 3% of ~1.54M candidates", b: "Placed among the top 3% nationally." },
+    {
+      date: "Aug 2025 → present",
+      h: "B.Tech Computer Science, SRM Institute of Science and Technology",
+      b: "GPA 9.9 / 10. Core focus: DSA, systems, ML.",
+    },
+    {
+      date: "2025",
+      h: "JEE Main — top 3% of ~1.54M candidates",
+      b: "Placed among the top 3% nationally.",
+    },
     { date: "2022 → 2024", h: "Senior Secondary (PCM + IP), DPS Ranchi — 92%", b: "" },
-    { date: "2010 → 2022", h: "Secondary, St. Thomas School, Ranchi — 98%", b: "Felicitated by the Chief Minister of Jharkhand for board results." },
-    { date: "Ongoing", h: "// TODO: confirm — Stanford ML (Andrew Ng) & Meta Back-End Development", b: "Kept off the timeline until confirmed." },
+    {
+      date: "2010 → 2022",
+      h: "Secondary, St. Thomas School, Ranchi — 98%",
+      b: "Felicitated by the Chief Minister of Jharkhand for board results.",
+    },
+    {
+      date: "Ongoing",
+      h: "// TODO: confirm — Stanford ML (Andrew Ng) & Meta Back-End Development",
+      b: "Kept off the timeline until confirmed.",
+    },
   ];
   return (
-    <section id="journey" className="rule-b relative overflow-hidden">
+    <section
+      id="journey"
+      data-scene
+      className="rule-b scene-surface cinematic-scene relative overflow-hidden"
+    >
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <SectionLabel n="04 / Timeline">Chronology</SectionLabel>
         <img
@@ -468,7 +850,7 @@ function Journey() {
           className="mt-8 block h-auto w-full max-w-3xl"
         />
 
-        <ol className="rule-t mt-16 max-w-4xl">
+        <ol data-timeline className="timeline-track rule-t mt-16 max-w-4xl">
           {items.map((it, i) => (
             <Reveal key={i} delay={i * 60}>
               <li className="rule-b grid grid-cols-1 gap-2 py-7 sm:grid-cols-[220px_1fr] sm:gap-10">
@@ -495,7 +877,7 @@ function Highlights() {
     { n: "2", l: "Leadership roles · SRMIST" },
   ];
   return (
-    <section className="rule-b bg-ink text-paper">
+    <section data-scene className="rule-b scene-surface bg-ink text-paper">
       <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-px bg-paper/20 px-0 md:grid-cols-4">
         {stats.map((s) => (
           <div key={s.l} className="bg-ink p-8">
@@ -516,17 +898,29 @@ function Skills() {
     { title: "Data / AI-ML", items: ["TensorFlow", "Pandas", "NumPy", "Machine Learning"] },
     { title: "Databases", items: ["MongoDB"] },
     { title: "Concepts", items: ["DSA", "OOP", "REST APIs", "DBMS", "Web Development"] },
-    { title: "Tools", items: ["Git", "GitHub", "VS Code", "Antigravity", "Figma", "Docker", "Firebase", "Postman"] },
-    { title: "Soft skills", items: ["Problem-solving", "Leadership", "Team collaboration", "Communication", "Public speaking"] },
+    {
+      title: "Tools",
+      items: ["Git", "GitHub", "VS Code", "Antigravity", "Figma", "Docker", "Firebase", "Postman"],
+    },
+    {
+      title: "Soft skills",
+      items: [
+        "Problem-solving",
+        "Leadership",
+        "Team collaboration",
+        "Communication",
+        "Public speaking",
+      ],
+    },
   ];
   return (
-    <section id="skills" className="rule-b">
+    <section id="skills" data-scene className="rule-b scene-surface cinematic-scene">
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <SectionLabel n="05 / Toolkit">What I'm good at</SectionLabel>
 
         <div className="mt-6 grid grid-cols-1 items-center gap-8 lg:grid-cols-12">
           <div className="lg:col-span-9">
-            <h2 className="display-serif text-5xl sm:text-6xl lg:text-7xl">
+            <h2 data-scene-heading className="display-serif text-5xl sm:text-6xl lg:text-7xl">
               Stuff I am g
               <span className="relative mx-1 inline-block align-middle">
                 <span className="inline-block h-[0.55em] w-[0.55em] rounded-full border-[6px] border-ink" />
@@ -542,6 +936,7 @@ function Skills() {
               src={skillsBust}
               alt=""
               aria-hidden
+              data-parallax="10"
               className="float-slow mx-auto block h-auto w-40 object-contain mix-blend-multiply sm:w-52 lg:w-full lg:max-w-[220px]"
             />
           </div>
@@ -550,14 +945,20 @@ function Skills() {
         <div className="rule-t mt-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {groups.map((g, i) => (
             <Reveal key={g.title} delay={i * 60}>
-              <div className={`rule-b group h-full p-6 transition hover:bg-muted/50 ${i % 3 !== 2 ? "lg:border-r" : ""} ${i % 2 === 0 ? "md:border-r lg:border-r" : ""}`}>
+              <div
+                className={`rule-b group h-full p-6 transition hover:bg-muted/50 ${i % 3 !== 2 ? "lg:border-r" : ""} ${i % 2 === 0 ? "md:border-r lg:border-r" : ""}`}
+              >
                 <div className="flex items-baseline justify-between">
                   <h3 className="font-display text-2xl">{g.title}</h3>
                   <span className="label-mono">0{i + 1}</span>
                 </div>
                 <ul className="mt-5 flex flex-wrap gap-2">
                   {g.items.map((it) => (
-                    <li key={it} className="border border-rule px-2.5 py-1 font-mono text-xs transition group-hover:border-ink">
+                    <li
+                      data-skill-chip
+                      key={it}
+                      className="border border-rule px-2.5 py-1 font-mono text-xs transition group-hover:border-ink"
+                    >
                       {it}
                     </li>
                   ))}
@@ -596,23 +997,32 @@ function Leadership() {
       b: "Represented a 4,000-student community. Ran assemblies, coordinated inter-house events, and worked directly with faculty on student initiatives.",
     },
   ];
-  const skills = ["Event management", "Community building", "Team collaboration", "Public speaking", "Mentorship"];
+  const skills = [
+    "Event management",
+    "Community building",
+    "Team collaboration",
+    "Public speaking",
+    "Mentorship",
+  ];
   return (
-    <section id="leadership" className="rule-b">
+    <section id="leadership" data-scene className="rule-b scene-surface cinematic-scene">
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <SectionLabel n="06 / Leadership">Beyond the editor</SectionLabel>
         <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-12">
           <div className="lg:col-span-5">
-            <h2 className="display-serif text-5xl sm:text-6xl lg:text-7xl">
+            <h2 data-scene-heading className="display-serif text-5xl sm:text-6xl lg:text-7xl">
               Leading <br />
               <em className="font-script not-italic text-primary">rooms,</em> not <br /> just repos.
             </h2>
             <p className="mt-8 max-w-md text-muted-foreground">
-              Software gets built by people. These are the rooms I've been trusted with — and the skills I've sharpened running them.
+              Software gets built by people. These are the rooms I've been trusted with — and the
+              skills I've sharpened running them.
             </p>
             <ul className="mt-8 flex flex-wrap gap-2">
               {skills.map((s) => (
-                <li key={s} className="border border-rule px-2.5 py-1 font-mono text-xs">{s}</li>
+                <li key={s} className="border border-rule px-2.5 py-1 font-mono text-xs">
+                  {s}
+                </li>
               ))}
             </ul>
           </div>
@@ -645,20 +1055,30 @@ function Leadership() {
 // —————— Closing ——————
 function Closing() {
   return (
-    <section className="rule-b relative overflow-hidden">
+    <section data-scene className="rule-b scene-surface cinematic-scene relative overflow-hidden">
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-12 px-6 py-24 sm:px-10 lg:grid-cols-12">
         <div className="relative lg:col-span-7">
           <SectionLabel n="07 / Sign-off">One line to remember</SectionLabel>
           <Reveal>
-            <blockquote className="display-serif mt-8 text-6xl leading-[0.95] sm:text-7xl lg:text-[8rem]">
+            <blockquote
+              data-scene-heading
+              className="display-serif mt-8 text-6xl leading-[0.95] sm:text-7xl lg:text-[8rem]"
+            >
               "I'm too young <br />
               <em className="font-script not-italic text-primary">not to try.</em>"
             </blockquote>
           </Reveal>
 
           <div className="relative mt-16 inline-block">
-            <svg viewBox="0 0 320 120" className="absolute -left-6 -top-4 h-full w-full text-muted -z-10" aria-hidden>
-              <path d="M20,60 C 40,10 220,10 300,50 C 320,90 200,110 40,100 Z" fill="currentColor" />
+            <svg
+              viewBox="0 0 320 120"
+              className="absolute -left-6 -top-4 h-full w-full text-muted -z-10"
+              aria-hidden
+            >
+              <path
+                d="M20,60 C 40,10 220,10 300,50 C 320,90 200,110 40,100 Z"
+                fill="currentColor"
+              />
             </svg>
             <p className="label-mono">Signed,</p>
             <p className="font-script text-5xl leading-tight text-ink sm:text-6xl">
@@ -666,14 +1086,22 @@ function Closing() {
             </p>
           </div>
 
-          <DashedArrow className="right-0 bottom-10 hidden h-40 w-40 text-ink lg:block" d="M20 20 C 80 60, 140 100, 180 160" />
+          <DashedArrow
+            className="right-0 bottom-10 hidden h-40 w-40 text-ink lg:block"
+            d="M20 20 C 80 60, 140 100, 180 160"
+          />
         </div>
 
         <div className="lg:col-span-5">
           <div className="border border-rule bg-muted/40 p-4">
-            <img src={closingPhoto} alt="Soham Siddhartha Mishra" className="mx-auto block w-full max-w-sm" />
+            <img
+              src={closingPhoto}
+              alt="Soham Siddhartha Mishra"
+              className="mx-auto block w-full max-w-sm"
+            />
             <div className="mt-3 flex justify-between label-mono">
-              <span>Fig. 03</span><span>Ranchi, 2026</span>
+              <span>Fig. 03</span>
+              <span>Ranchi, 2026</span>
             </div>
           </div>
           <a
@@ -695,7 +1123,9 @@ function Footer() {
       <div className="mx-auto flex max-w-[1400px] flex-wrap items-center justify-between gap-4 px-6 py-8 label-mono sm:px-10">
         <span>© 2026 Soham Siddhartha Mishra</span>
         <span>Built in Ranchi · Set in Fraunces &amp; Public Sans</span>
-        <a href="#top" className="text-primary hover:underline">Back to top ↑</a>
+        <a href="#top" className="text-primary hover:underline">
+          Back to top ↑
+        </a>
       </div>
     </footer>
   );
