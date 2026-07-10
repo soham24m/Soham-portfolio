@@ -384,13 +384,17 @@ function Projects() {
               <h2 className="display-serif text-5xl sm:text-6xl lg:text-7xl">
                 Have a look at <br /> my projects.
               </h2>
-              <img
-                src={pointHand}
-                alt=""
-                aria-hidden
-                className="float-slow hidden -rotate-12 self-end sm:block"
-                style={{ height: "clamp(9rem, 18vw, 18rem)", width: "auto" }}
-              />
+             <img
+  src={pointHand}
+  alt=""
+  aria-hidden
+  className="hidden self-end sm:block"
+  style={{
+    height: "clamp(11rem, 22vw, 22rem)",
+    width: "auto",
+    transform: "scaleX(-1) rotate(12deg)",
+  }}
+/>
             </div>
           </div>
         </div>
