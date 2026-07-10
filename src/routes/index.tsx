@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
+import { Github, Linkedin, Mail, Phone } from "lucide-react";
 import heroPhoto from "@/assets/portfolio/hero-photo.png";
 import thinkingPhoto from "@/assets/portfolio/thinking-photo.png";
-import closingPhoto from "@/assets/portfolio/closing-photo-new.png";
+import closingPhoto from "@/assets/portfolio/closing-portrait.png";
 import peaceHand from "@/assets/portfolio/peace-hand.png";
 import bust from "@/assets/portfolio/bust.png";
 import questionMark from "@/assets/portfolio/question.png";
@@ -36,28 +37,64 @@ function useReveal<T extends HTMLElement>() {
 
 function useSectionMotion<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
-  const [shown, setShown] = useState(false);
+  const [phase, setPhase] = useState<"" | "is-entering" | "is-visible" | "is-exiting">("");
 
   useEffect(() => {
     const element = ref.current;
     if (!element || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setShown(true);
+      setPhase("is-visible");
       return;
     }
+
+    let entranceTimer: number | undefined;
+    let hasEntered = false;
+
+    const enter = () => {
+      if (hasEntered) return;
+      hasEntered = true;
+      setPhase("is-entering");
+      entranceTimer = window.setTimeout(() => setPhase("is-visible"), 360);
+    };
 
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (!entry.isIntersecting) return;
-        setShown(true);
+        enter();
         observer.disconnect();
       },
-      { rootMargin: "0px 0px -8%", threshold: 0.01 },
+      { rootMargin: "0px 0px -65%", threshold: 0.01 },
     );
     observer.observe(element);
-    return () => observer.disconnect();
+
+    let frame = 0;
+    const updateExit = () => {
+      frame = 0;
+      if (!hasEntered) return;
+      const { bottom, top } = element.getBoundingClientRect();
+      const exitZone = Math.min(window.innerHeight * 0.16, 140);
+
+      // Exit only when the final sliver of a section is leaving the viewport.
+      // The reading area remains static for the entire time it is on screen.
+      if (bottom > 0 && bottom <= exitZone) {
+        setPhase("is-exiting");
+      } else if (top < window.innerHeight && bottom > exitZone) {
+        setPhase("is-visible");
+      }
+    };
+    const onScroll = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateExit);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+      if (entranceTimer) window.clearTimeout(entranceTimer);
+    };
   }, []);
 
-  return { ref, shown };
+  return { ref, phase };
 }
 
 function MotionSection({
@@ -69,13 +106,9 @@ function MotionSection({
   className?: string;
   id?: string;
 }) {
-  const { ref, shown } = useSectionMotion<HTMLElement>();
+  const { ref, phase } = useSectionMotion<HTMLElement>();
   return (
-    <section
-      ref={ref}
-      id={id}
-      className={`section-motion ${shown ? "is-visible" : ""} ${className}`}
-    >
+    <section ref={ref} id={id} className={`section-motion ${phase} ${className}`}>
       {children}
     </section>
   );
@@ -332,14 +365,16 @@ function SayHi() {
       label: "Email",
       value: "sohamsiddhartham@icloud.com",
       href: "mailto:sohamsiddhartham@icloud.com",
+      icon: Mail,
     },
-    { label: "Phone", value: "+91 82358 21666", href: "tel:+918235821666" },
+    { label: "Phone", value: "+91 82358 21666", href: "tel:+918235821666", icon: Phone },
     {
       label: "LinkedIn",
       value: "in/soham-siddhartha-mishra",
       href: "https://www.linkedin.com/in/soham-siddhartha-mishra-ba1aa822a/",
+      icon: Linkedin,
     },
-    { label: "GitHub", value: "@soham24m", href: "https://github.com/soham24m" },
+    { label: "GitHub", value: "@soham24m", href: "https://github.com/soham24m", icon: Github },
   ];
   return (
     <MotionSection id="contact" className="rule-b relative">
@@ -361,8 +396,9 @@ function SayHi() {
                 href={c.href}
                 target={c.href.startsWith("http") ? "_blank" : undefined}
                 rel="noreferrer"
-                className="rule-b group flex items-center justify-between py-5 transition hover:bg-muted/50"
+                className="rule-b group flex items-center gap-3 py-5 transition hover:bg-muted/50"
               >
+                <c.icon aria-hidden size={20} strokeWidth={1.6} className="shrink-0 text-ink" />
                 <span className="label-mono w-28">{c.label}</span>
                 <span className="min-w-0 flex-1 break-words font-display text-xl sm:text-2xl">
                   {c.value}
@@ -861,11 +897,11 @@ function Closing() {
 
         <div className="lg:col-span-5">
           <div className="border border-rule bg-muted/40 p-4">
-            <div className="overflow-hidden">
+            <div className="aspect-[4/5] overflow-hidden border border-rule bg-paper">
               <img
                 src={closingPhoto}
                 alt="Soham Siddhartha Mishra"
-                className="image-zoom mx-auto block w-full max-w-sm"
+                className="image-zoom block h-full w-full object-cover object-center"
               />
             </div>
             <div className="mt-3 flex justify-between label-mono">

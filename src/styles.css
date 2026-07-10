@@ -106,7 +106,7 @@
 }
 .draw-arrow path {
   stroke-dasharray: 800;
-  animation: draw 1.6s ease-out forwards;
+  animation: draw 460ms ease-out forwards;
 }
 
 html {
@@ -131,16 +131,25 @@ body {
   filter: blur(2px);
   transform: translate3d(0, 40px, 0) scale(0.98);
   transition:
-    opacity 460ms ease-out,
-    filter 460ms ease-out,
-    transform 460ms cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 360ms ease-out,
+    filter 360ms ease-out,
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
   will-change: opacity, filter, transform;
 }
+.section-motion.is-entering,
 .section-motion.is-visible {
   opacity: 1;
   filter: blur(0);
   transform: translate3d(0, 0, 0) scale(1);
+}
+.section-motion.is-visible {
   will-change: auto;
+}
+.section-motion.is-exiting {
+  opacity: 0;
+  filter: blur(2px);
+  transform: translate3d(0, -40px, 0) scale(0.98);
+  will-change: opacity, filter, transform;
 }
 @keyframes hero-enter {
   from {
