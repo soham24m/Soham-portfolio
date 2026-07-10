@@ -19,18 +19,66 @@ export const Route = createFileRoute("/")({
 
 function useReveal<T extends HTMLElement>() {
   const ref = useRef<T | null>(null);
-  const [shown, setShown] = useState(false);
+  const [shown, setShown] = useState(true);
+
   useEffect(() => {
     const element = ref.current;
-    if (!element) return;
+    if (!element || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      return;
+    }
+    // Content-level elements stay visible. Section-level motion below carries the
+    // entrance, so a card can never remain hidden while someone is reading it.
+    setShown(true);
+  }, []);
+
+  return { ref, shown };
+}
+
+function useSectionMotion<T extends HTMLElement>() {
+  const ref = useRef<T | null>(null);
+  const [shown, setShown] = useState(false);
+
+  useEffect(() => {
+    const element = ref.current;
+    if (!element || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShown(true);
+      return;
+    }
+
     const observer = new IntersectionObserver(
-      (entries) => entries.forEach((entry) => entry.isIntersecting && setShown(true)),
-      { threshold: 0.15 },
+      ([entry]) => {
+        if (!entry.isIntersecting) return;
+        setShown(true);
+        observer.disconnect();
+      },
+      { rootMargin: "0px 0px -8%", threshold: 0.01 },
     );
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+
   return { ref, shown };
+}
+
+function MotionSection({
+  children,
+  className = "",
+  id,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  id?: string;
+}) {
+  const { ref, shown } = useSectionMotion<HTMLElement>();
+  return (
+    <section
+      ref={ref}
+      id={id}
+      className={`section-motion ${shown ? "is-visible" : ""} ${className}`}
+    >
+      {children}
+    </section>
+  );
 }
 
 function Reveal({
@@ -170,41 +218,30 @@ function TopBar() {
 function Hero() {
   return (
     <section id="top" className="hero-section rule-b relative overflow-hidden">
-      <div className="hero-shell mx-auto max-w-[1400px] px-6 pb-16 pt-14 sm:px-10 lg:pb-24 lg:pt-20">
-        <div className="hero-load">
+      <div className="hero-shell mx-auto max-w-[1400px] px-6 sm:px-10">
+        <div className="hero-intro hero-load">
           <SectionLabel n="00 / Intro">Ranchi → Chennai</SectionLabel>
-        </div>
-
-        {/* Big centered heading at the very top */}
-        <div className="hero-load hero-load-delay-1 mt-10 text-center">
-          <div className="mb-2 flex flex-col items-center leading-none">
-            <span className="font-script text-2xl text-primary sm:text-3xl lg:text-4xl">
-              Hey there,
-            </span>
-            <span className="font-script text-2xl text-primary sm:text-3xl lg:text-4xl">I'm</span>
+          <div className="hero-greeting">
+            <div className="hero-load hero-load-delay-1 leading-none">
+              <p className="font-script text-3xl text-primary sm:text-4xl">Hi there, I&apos;m</p>
+              <h1 className="hero-name display-serif mt-4 font-black uppercase tracking-[-0.04em] text-ink">
+                SOHAM
+              </h1>
+            </div>
           </div>
-          <h1
-            className="display-serif w-full font-black uppercase tracking-[-0.04em] leading-[0.82] text-ink"
-            style={{ fontSize: "clamp(3.5rem, 16vw, 14rem)" }}
-          >
-            SOHAM
-          </h1>
         </div>
 
-        <div className="hero-visuals hero-load hero-load-delay-2 relative mt-10 flex items-center justify-between gap-6">
-          {/* Peace hand — huge, extreme left */}
-          <div className="hero-hand relative flex-shrink-0">
+        <div className="hero-visuals hero-load hero-load-delay-2" aria-hidden>
+          <div className="hero-hand">
             <img
               src={peaceHand}
               alt=""
-              aria-hidden
               className="float-slow block h-auto w-full max-w-[620px] object-contain"
             />
           </div>
 
-          {/* Hero photo — extreme right, boxed with caption */}
-          <div className="hero-portrait relative flex-shrink-0">
-            <div className="relative mx-auto max-w-md lg:max-w-none">
+          <div className="hero-portrait">
+            <div className="relative">
               <div className="rule-t rule-b border-x border-rule bg-muted/40 p-4">
                 <img
                   src={heroPhoto}
@@ -217,19 +254,19 @@ function Hero() {
                 </div>
               </div>
 
-              <div className="hero-welcome absolute -right-4 -bottom-8 max-w-[240px] border border-ink bg-paper p-4 sm:-right-8">
-                <div className="label-mono text-primary">Welcome to my tech side</div>
+              <div className="hero-welcome absolute border border-ink bg-paper p-4">
+                <div className="label-mono text-primary">A little about me</div>
                 <p className="mt-2 font-display text-xl leading-tight">
-                  Building thoughtful software, one commit at a time.
+                  Thoughtful software, fewer rough edges.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        <div className="hero-copy hero-load hero-load-delay-3 mt-10 grid grid-cols-1 gap-10 lg:grid-cols-12">
-          <div className="lg:col-span-12">
-            <div className="hero-facts grid max-w-2xl grid-cols-1 gap-6 sm:grid-cols-[auto_1fr] sm:items-start">
+        <div className="hero-copy hero-load hero-load-delay-3">
+          <div>
+            <div className="hero-facts grid max-w-2xl grid-cols-[auto_1fr] gap-x-6 gap-y-4 sm:gap-x-10">
               <div className="label-mono">Role</div>
               <p className="font-display text-2xl leading-tight sm:text-3xl">
                 AI Engineer <span className="text-muted-foreground">&amp;</span> Full-Stack
@@ -244,7 +281,7 @@ function Hero() {
               <p className="text-lg"> Chennai , Tamil Nadu · India</p>
             </div>
 
-            <div className="hero-actions mt-10 flex flex-wrap gap-4">
+            <div className="hero-actions mt-8 flex flex-wrap gap-4">
               <a
                 href="#contact"
                 className="button-lift border border-ink bg-ink px-5 py-3 text-sm font-medium text-paper hover:border-primary hover:bg-primary"
@@ -269,19 +306,19 @@ function Hero() {
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="rule-t">
-        <div className="hero-skills mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-10 gap-y-2 px-6 py-3 label-mono sm:px-10">
-          <span>Java</span>
-          <span>C++</span>
-          <span>Python</span>
-          <span>React</span>
-          <span>Node</span>
-          <span>TensorFlow</span>
-          <span>MongoDB</span>
-          <span>Docker</span>
-          <span className="ml-auto text-primary">GPA 9.9 / 10</span>
+        <div className="hero-skills rule-t">
+          <div className="mx-auto flex max-w-[1400px] flex-wrap items-center gap-x-10 gap-y-2 px-6 py-3 label-mono sm:px-10">
+            <span>Java</span>
+            <span>C++</span>
+            <span>Python</span>
+            <span>React</span>
+            <span>Node</span>
+            <span>TensorFlow</span>
+            <span>MongoDB</span>
+            <span>Docker</span>
+            <span className="ml-auto text-primary">GPA 9.9 / 10</span>
+          </div>
         </div>
       </div>
     </section>
@@ -305,10 +342,10 @@ function SayHi() {
     { label: "GitHub", value: "@soham24m", href: "https://github.com/soham24m" },
   ];
   return (
-    <section id="contact" className="rule-b relative">
+    <MotionSection id="contact" className="rule-b relative">
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-12 px-6 py-20 sm:px-10 lg:grid-cols-12">
         <div className="lg:col-span-7">
-          <SectionLabel n="01 / Contact">Say hi</SectionLabel>
+          <SectionLabel n="01 / Contact">Come say hi</SectionLabel>
           <Reveal>
             <h2 className="display-serif mt-6 text-6xl sm:text-7xl lg:text-8xl">
               Say hi, <br />
@@ -347,11 +384,11 @@ function SayHi() {
             />
           </div>
           <p className="mt-6 max-w-xs font-script text-2xl text-muted-foreground">
-            reflect · reach out · reply
+            Yes, I do check my email. Drop a hi.
           </p>
         </div>
       </div>
-    </section>
+    </MotionSection>
   );
 }
 
@@ -385,14 +422,14 @@ function WhyHire() {
     },
   ];
   return (
-    <section className="rule-b relative">
+    <MotionSection className="rule-b relative">
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
           <div className="lg:col-span-5">
-            <SectionLabel n="02 / Pitch">The case</SectionLabel>
+            <SectionLabel n="02 / Pitch">The case for me</SectionLabel>
             <div className="relative mt-6">
               <h2 className="display-serif text-5xl sm:text-6xl lg:text-7xl">
-                Why should <br /> you hire me?
+                Why me, <br /> though?
               </h2>
               <img
                 src={questionMark}
@@ -433,7 +470,7 @@ function WhyHire() {
           </div>
         </div>
       </div>
-    </section>
+    </MotionSection>
   );
 }
 
@@ -478,14 +515,14 @@ function Projects() {
   ];
 
   return (
-    <section id="work" className="rule-b">
+    <MotionSection id="work" className="rule-b">
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <div className="flex-1">
             <SectionLabel n="03 / Work">Selected projects</SectionLabel>
             <div className="relative mt-4 flex items-end justify-between gap-6">
               <h2 className="display-serif text-5xl sm:text-6xl lg:text-7xl">
-                Have a look at <br /> my projects.
+                A few things <br /> I&apos;ve built.
               </h2>
               <img
                 src={pointHand}
@@ -546,7 +583,7 @@ function Projects() {
           })}
         </div>
       </div>
-    </section>
+    </MotionSection>
   );
 }
 
@@ -576,7 +613,7 @@ function Journey() {
     },
   ];
   return (
-    <section id="journey" className="rule-b relative overflow-hidden">
+    <MotionSection id="journey" className="rule-b relative overflow-hidden">
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <SectionLabel n="04 / Timeline">Chronology</SectionLabel>
         <img
@@ -599,7 +636,7 @@ function Journey() {
           ))}
         </ol>
       </div>
-    </section>
+    </MotionSection>
   );
 }
 
@@ -612,7 +649,7 @@ function Highlights() {
     { n: "2", l: "Leadership roles · SRMIST" },
   ];
   return (
-    <section className="rule-b bg-ink text-paper">
+    <MotionSection className="rule-b bg-ink text-paper">
       <div className="mx-auto grid max-w-[1400px] grid-cols-2 gap-px bg-paper/20 px-0 md:grid-cols-4">
         {stats.map((s) => (
           <div key={s.l} className="bg-ink p-8">
@@ -621,7 +658,7 @@ function Highlights() {
           </div>
         ))}
       </div>
-    </section>
+    </MotionSection>
   );
 }
 
@@ -649,7 +686,7 @@ function Skills() {
     },
   ];
   return (
-    <section id="skills" className="rule-b">
+    <MotionSection id="skills" className="rule-b">
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <SectionLabel n="05 / Toolkit">What I'm good at</SectionLabel>
 
@@ -701,7 +738,7 @@ function Skills() {
           ))}
         </div>
       </div>
-    </section>
+    </MotionSection>
   );
 }
 
@@ -738,7 +775,7 @@ function Leadership() {
     "Mentorship",
   ];
   return (
-    <section id="leadership" className="rule-b">
+    <MotionSection id="leadership" className="rule-b">
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <SectionLabel n="06 / Leadership">Beyond the editor</SectionLabel>
         <div className="mt-6 grid grid-cols-1 gap-10 lg:grid-cols-12">
@@ -748,8 +785,8 @@ function Leadership() {
               <em className="font-script not-italic text-primary">rooms,</em> not <br /> just repos.
             </h2>
             <p className="mt-8 max-w-md text-muted-foreground">
-              Software gets built by people. These are the rooms I've been trusted with — and the
-              skills I've sharpened running them.
+              Software gets built by people. These are the rooms I&apos;ve been trusted with — and
+              the skills I&apos;ve picked up while running them.
             </p>
             <ul className="mt-8 flex flex-wrap gap-2">
               {skills.map((s) => (
@@ -781,14 +818,14 @@ function Leadership() {
           </div>
         </div>
       </div>
-    </section>
+    </MotionSection>
   );
 }
 
 // —————— Closing ——————
 function Closing() {
   return (
-    <section className="rule-b relative overflow-hidden">
+    <MotionSection className="rule-b relative overflow-hidden">
       <div className="mx-auto grid max-w-[1400px] grid-cols-1 gap-12 px-6 py-24 sm:px-10 lg:grid-cols-12">
         <div className="relative lg:col-span-7">
           <SectionLabel n="07 / Sign-off">One line to remember</SectionLabel>
@@ -840,12 +877,12 @@ function Closing() {
             href="mailto:sohamsiddhartham@icloud.com"
             className="button-lift mt-8 flex items-center justify-between border border-ink px-6 py-5 hover:bg-ink hover:text-paper"
           >
-            <span className="font-display text-xl">Start a conversation</span>
+            <span className="font-display text-xl">Got an idea? Let&apos;s build it.</span>
             <span className="label-mono">→</span>
           </a>
         </div>
       </div>
-    </section>
+    </MotionSection>
   );
 }
 
