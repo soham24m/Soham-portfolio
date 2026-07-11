@@ -83,6 +83,20 @@ function useGalleryMotion(root: React.RefObject<HTMLElement | null>) {
           },
         );
       });
+
+      gsap.utils.toArray<HTMLElement>(".scroll-jiggle").forEach((element, index) => {
+        const direction = index % 2 === 0 ? 1 : -1;
+        gsap.fromTo(
+          element,
+          { y: 7, rotation: -0.9 * direction, transformPerspective: 1000 },
+          {
+            y: -7,
+            rotation: 0.9 * direction,
+            ease: "none",
+            scrollTrigger: { trigger: element, start: "top bottom", end: "bottom top", scrub: 0.8 },
+          },
+        );
+      });
     }, root);
 
     return () => {
@@ -334,16 +348,18 @@ function Hero() {
 
         <div className="hero-visuals hero-load hero-load-delay-2" aria-hidden>
           <div className="hero-hand">
-            <img
-              src={peaceHand}
-              alt=""
-              className="float-slow block h-auto w-full max-w-[620px] object-contain"
-            />
+            <div className="scroll-jiggle">
+              <img
+                src={peaceHand}
+                alt=""
+                className="float-slow block h-auto w-full max-w-[620px] object-contain"
+              />
+            </div>
           </div>
 
           <div className="hero-portrait">
             <div className="relative">
-              <div className="rule-t rule-b border-x border-rule bg-muted/40 p-4">
+              <div className="scroll-jiggle rule-t rule-b border-x border-rule bg-muted/40 p-4">
                 <img
                   src={heroPhoto}
                   alt="Soham Siddhartha Mishra"
@@ -481,7 +497,9 @@ function SayHi() {
 
         <div className="relative lg:col-span-5">
           <div className="relative mx-auto max-w-sm">
-            <img src={bust} alt="" aria-hidden className="float-slow mx-auto block w-full" />
+            <div className="scroll-jiggle">
+              <img src={bust} alt="" aria-hidden className="float-slow mx-auto block w-full" />
+            </div>
             <DashedArrow
               className="left-[-40px] top-[20%] hidden h-40 w-40 text-ink lg:block"
               d="M10 20 C 60 40, 90 80, 160 100"
@@ -535,15 +553,12 @@ function WhyHire() {
               <h2 className="display-serif text-5xl sm:text-6xl lg:text-7xl">
                 Why me, <br /> though?
               </h2>
-              <img
-                src={questionMark}
-                alt=""
-                aria-hidden
-                className="float-slow absolute -right-4 -top-10 w-28 sm:w-36 lg:-right-8 lg:-top-16 lg:w-44"
-              />
+              <span className="scroll-jiggle absolute -right-4 -top-10 w-28 sm:w-36 lg:-right-8 lg:-top-16 lg:w-44">
+                <img src={questionMark} alt="" aria-hidden className="float-slow block w-full" />
+              </span>
             </div>
             <div className="mt-10 border border-rule bg-muted/40 p-4">
-              <div className="overflow-hidden">
+              <div className="scroll-jiggle overflow-hidden">
                 <img
                   src={thinkingPhoto}
                   alt="Soham thinking"
@@ -628,17 +643,18 @@ function Projects() {
               <h2 className="display-serif text-5xl sm:text-6xl lg:text-7xl">
                 A few things <br /> I&apos;ve built.
               </h2>
-              <img
-                src={pointHand}
-                alt=""
-                aria-hidden
-                className="hidden self-end sm:block"
-                style={{
-                  height: "clamp(11rem, 22vw, 22rem)",
-                  width: "auto",
-                  transform: "scaleX(-1) rotate(12deg)",
-                }}
-              />
+              <div className="scroll-jiggle hidden self-end sm:block">
+                <img
+                  src={pointHand}
+                  alt=""
+                  aria-hidden
+                  style={{
+                    height: "clamp(11rem, 22vw, 22rem)",
+                    width: "auto",
+                    transform: "scaleX(-1) rotate(12deg)",
+                  }}
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -734,10 +750,10 @@ function Journey() {
           <img
             src={journeyTitle}
             alt="My journey so far"
-            className="block h-auto w-full max-w-3xl"
+            className="scroll-jiggle block h-auto w-full max-w-3xl"
           />
           <figure className="journey-photo-frame border border-rule bg-muted/40 p-3">
-            <div className="overflow-hidden border border-rule bg-paper">
+            <div className="scroll-jiggle overflow-hidden border border-rule bg-paper">
               <img
                 src={journeyMilestones}
                 alt="Soham's Head Boy and TEDx milestones"
@@ -833,12 +849,14 @@ function Skills() {
             </h2>
           </div>
           <div className="lg:col-span-3">
-            <img
-              src={skillsBust}
-              alt=""
-              aria-hidden
-              className="float-slow mx-auto block h-auto w-40 object-contain mix-blend-multiply sm:w-52 lg:w-full lg:max-w-[220px]"
-            />
+            <div className="scroll-jiggle">
+              <img
+                src={skillsBust}
+                alt=""
+                aria-hidden
+                className="float-slow mx-auto block h-auto w-40 object-contain mix-blend-multiply sm:w-52 lg:w-full lg:max-w-[220px]"
+              />
+            </div>
           </div>
         </div>
 
@@ -990,7 +1008,7 @@ function Closing() {
 
         <div className="lg:col-span-5">
           <div className="border border-rule bg-muted/40 p-4">
-            <div className="aspect-[4/5] overflow-hidden border border-rule bg-paper">
+            <div className="scroll-jiggle aspect-[4/5] overflow-hidden border border-rule bg-paper">
               <img
                 src={closingPhoto}
                 alt="Soham Siddhartha Mishra"
