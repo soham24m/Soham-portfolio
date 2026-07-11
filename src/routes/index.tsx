@@ -249,8 +249,30 @@ function TopBar() {
 
 // —————— Hero ——————
 function Hero() {
+  const heroRef = useRef<HTMLElement | null>(null);
+
+  const setHeroPointer = (event: React.PointerEvent<HTMLElement>) => {
+    if (event.pointerType === "touch" || !heroRef.current) return;
+    const bounds = heroRef.current.getBoundingClientRect();
+    heroRef.current.style.setProperty("--hero-pointer-x", `${event.clientX - bounds.left}px`);
+    heroRef.current.style.setProperty("--hero-pointer-y", `${event.clientY - bounds.top}px`);
+  };
+
+  const resetHeroPointer = () => {
+    heroRef.current?.style.removeProperty("--hero-pointer-x");
+    heroRef.current?.style.removeProperty("--hero-pointer-y");
+  };
+
   return (
-    <section id="top" className="hero-section rule-b relative overflow-hidden">
+    <section
+      ref={heroRef}
+      id="top"
+      className="hero-section hero-depth rule-b relative overflow-hidden"
+      onPointerMove={setHeroPointer}
+      onPointerLeave={resetHeroPointer}
+    >
+      <span className="hero-orb hero-orb-one" aria-hidden />
+      <span className="hero-orb hero-orb-two" aria-hidden />
       <div className="hero-shell mx-auto max-w-[1400px] px-6 sm:px-10">
         <div className="hero-intro hero-load">
           <SectionLabel n="00 / Intro">Ranchi → Chennai</SectionLabel>
@@ -317,7 +339,7 @@ function Hero() {
             <div className="hero-actions mt-8 flex flex-wrap gap-4">
               <a
                 href="#contact"
-                className="button-lift border border-ink bg-ink px-5 py-3 text-sm font-medium text-paper hover:border-primary hover:bg-primary"
+                className="button-lift magnetic-button border border-ink bg-ink px-5 py-3 text-sm font-medium text-paper hover:border-primary hover:bg-primary"
               >
                 Say hi →
               </a>
@@ -326,13 +348,13 @@ function Hero() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Open Soham Siddhartha Mishra's resume in a new tab"
-                className="button-lift border border-ink px-5 py-3 text-sm font-medium hover:bg-ink hover:text-paper"
+                className="button-lift magnetic-button border border-ink px-5 py-3 text-sm font-medium hover:bg-ink hover:text-paper"
               >
                 Resume
               </a>
               <a
                 href="#work"
-                className="button-lift border border-ink px-5 py-3 text-sm font-medium hover:bg-ink hover:text-paper"
+                className="button-lift magnetic-button border border-ink px-5 py-3 text-sm font-medium hover:bg-ink hover:text-paper"
               >
                 See the work
               </a>
@@ -396,14 +418,14 @@ function SayHi() {
                 href={c.href}
                 target={c.href.startsWith("http") ? "_blank" : undefined}
                 rel="noreferrer"
-                className="rule-b group flex items-center gap-3 py-5 transition hover:bg-muted/50"
+                className="contact-link rule-b group flex items-center gap-3 py-5"
               >
-                <c.icon aria-hidden size={20} strokeWidth={1.6} className="shrink-0 text-ink" />
+                <c.icon aria-hidden size={20} strokeWidth={1.6} className="contact-icon shrink-0 text-ink" />
                 <span className="label-mono w-28">{c.label}</span>
                 <span className="min-w-0 flex-1 break-words font-display text-xl sm:text-2xl">
                   {c.value}
                 </span>
-                <span className="label-mono text-primary opacity-60 transition group-hover:opacity-100">
+                <span className="contact-arrow label-mono text-primary">
                   →
                 </span>
               </a>
@@ -433,18 +455,18 @@ function WhyHire() {
   const points = [
     {
       k: "01",
-      h: "Production-ready AI applications.",
-      b: "I build LLM-powered products end-to-end — RAG pipelines, tool-using agents, streaming chat UIs — wired to real APIs with prompt evals, guardrails, and cost/latency budgets that hold up outside a notebook.",
+      h: "Intelligent products, built for real use.",
+      b: "I bring machine learning and AI-powered application ideas into useful products: integrating models with dependable backend systems, clear interfaces, and the practical constraints that make a project work beyond a demo.",
     },
     {
       k: "02",
-      h: "End-to-end full-stack ownership.",
-      b: "React and TypeScript on the front, Node and Python on the back, Postgres and Mongo underneath. Auth, REST endpoints, schema design, background jobs, deployment — I ship the whole slice, not just the happy path.",
+      h: "Modern frontend, dependable backend.",
+      b: "From React and TypeScript on the front to Node, Python, APIs, data stores, and deployment behind it, I build the complete product slice with an eye on the people and systems it needs to serve.",
     },
     {
       k: "03",
-      h: "Clean code, scalable architecture.",
-      b: "Typed contracts, small modules, tests where they earn their keep, and boundaries that let systems grow. I optimise for the engineer reading this in six months, not for a demo on Friday.",
+      h: "Scalable architecture with product thinking.",
+      b: "I use typed contracts, focused modules, and thoughtful system boundaries to turn ambiguous problems into maintainable real-world projects — while keeping the next user and next engineer in view.",
     },
     {
       k: "04",
@@ -594,7 +616,7 @@ function Projects() {
                   {p.stack.length > 0 && (
                     <ul className="mt-6 flex flex-wrap gap-2">
                       {p.stack.map((s) => (
-                        <li key={s} className="border border-rule px-2 py-1 label-mono">
+                        <li key={s} className="project-stack border border-rule px-2 py-1 label-mono">
                           {s}
                         </li>
                       ))}
@@ -606,7 +628,7 @@ function Projects() {
                         <a
                           key={l.label}
                           href={l.href}
-                          className="label-mono text-primary hover:underline"
+                          className="magnetic-link label-mono text-primary"
                         >
                           {l.label} →
                         </a>
@@ -627,6 +649,11 @@ function Projects() {
 function Journey() {
   const items = [
     {
+      date: "2026",
+      h: "Machine Learning Specialization, Coursera — completed",
+      b: "Completed the Machine Learning Specialization, strengthening my foundation in practical ML concepts and model-driven problem solving.",
+    },
+    {
       date: "Aug 2025 → present",
       h: "B.Tech Computer Science, SRM Institute of Science and Technology",
       b: "GPA 9.9 / 10. Core focus: DSA, systems, ML.",
@@ -643,9 +670,14 @@ function Journey() {
       b: "Felicitated by the Chief Minister of Jharkhand for board results.",
     },
     {
-      date: "Ongoing",
-      h: "// TODO: confirm — Stanford ML (Andrew Ng) & Meta Back-End Development",
-      b: "Kept off the timeline until confirmed.",
+      date: "2022",
+      h: "Head Boy, St. Thomas School",
+      b: "Led a community of 4,000+ students with care and responsibility.",
+    },
+    {
+      date: "2026",
+      h: "TEDx SRMIST team member",
+      b: "Contributing to an ideas-driven team and the next chapter of my journey.",
     },
   ];
   return (

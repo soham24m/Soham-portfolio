@@ -127,33 +127,33 @@ body {
   transform: none;
 }
 .section-motion {
-  opacity: 0;
-  filter: blur(2px);
-  transform: translate3d(0, 40px, 0) scale(0.98);
+  /* Sections are always legible; motion is a small positional cue, never a
+     visibility gate. */
+  opacity: 1;
+  filter: none;
+  transform: perspective(1200px) translate3d(0, 14px, 0) scale(0.998) rotateX(0.25deg);
   transition:
-    opacity 360ms ease-out,
-    filter 360ms ease-out,
-    transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+    transform 560ms cubic-bezier(0.16, 1, 0.3, 1);
   will-change: opacity, filter, transform;
 }
 .section-motion.is-entering,
 .section-motion.is-visible {
   opacity: 1;
-  filter: blur(0);
-  transform: translate3d(0, 0, 0) scale(1);
+  filter: none;
+  transform: perspective(1200px) translate3d(0, 0, 0) scale(1) rotateX(0);
 }
 .section-motion.is-visible {
   will-change: auto;
 }
 .section-motion.is-exiting {
-  opacity: 0;
-  filter: blur(2px);
-  transform: translate3d(0, -40px, 0) scale(0.98);
+  opacity: 1;
+  filter: none;
+  transform: perspective(1200px) translate3d(0, -10px, 0) scale(0.998) rotateX(-0.2deg);
   will-change: opacity, filter, transform;
 }
 @keyframes hero-enter {
   from {
-    opacity: 0;
+    opacity: 1;
     transform: translate3d(0, 12px, 0);
   }
   to {
@@ -207,14 +207,65 @@ body {
   transform-origin: left;
 }
 .project-card {
+  isolation: isolate;
+  overflow: hidden;
   transition:
-    transform 220ms ease-out,
-    background-color 350ms ease,
-    border-color 350ms ease;
+    transform 420ms cubic-bezier(0.16, 1, 0.3, 1),
+    background-color 420ms ease,
+    border-color 420ms ease,
+    box-shadow 420ms ease;
   will-change: transform;
 }
+.project-card::before {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: radial-gradient(circle at 82% 12%, rgb(70 90 175 / 0.14), transparent 34%);
+  content: "";
+  transform: translate3d(18%, -18%, 0);
+  transition: transform 560ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.project-card > * {
+  position: relative;
+  z-index: 1;
+}
 .project-card:hover {
+  transform: perspective(900px) translate3d(0, -7px, 0) rotateX(0.45deg);
+  box-shadow: 0 18px 36px rgb(47 37 25 / 0.1);
+}
+.project-card:hover::before {
+  transform: translate3d(0, 0, 0);
+}
+.project-stack {
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), border-color 280ms ease;
+}
+.project-card:hover .project-stack {
   transform: translate3d(0, -3px, 0);
+  border-color: var(--ink);
+}
+.magnetic-link {
+  display: inline-flex;
+  align-items: center;
+  position: relative;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms ease;
+}
+.magnetic-link::after {
+  width: 0.8rem;
+  height: 1px;
+  margin-left: 0.4rem;
+  background: currentColor;
+  content: "";
+  transform: scaleX(0.25);
+  transform-origin: left;
+  transition: transform 260ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.magnetic-link:hover,
+.magnetic-link:focus-visible {
+  transform: translate3d(3px, -1px, 0);
+}
+.magnetic-link:hover::after,
+.magnetic-link:focus-visible::after {
+  transform: scaleX(1);
 }
 .card-lift {
   transition:
@@ -235,6 +286,70 @@ body {
 .button-lift:hover {
   transform: translate3d(0, -2px, 0);
 }
+.magnetic-button {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.magnetic-button::before {
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  background: linear-gradient(105deg, transparent 28%, rgb(255 255 255 / 0.24) 50%, transparent 72%);
+  content: "";
+  transform: translate3d(-115%, 0, 0);
+  transition: transform 520ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.magnetic-button:hover,
+.magnetic-button:focus-visible {
+  transform: translate3d(0, -3px, 0) scale(1.015);
+  box-shadow: 0 10px 20px rgb(47 37 25 / 0.14);
+}
+.magnetic-button:hover::before,
+.magnetic-button:focus-visible::before {
+  transform: translate3d(115%, 0, 0);
+}
+.contact-link {
+  position: relative;
+  overflow: hidden;
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1), background-color 280ms ease;
+}
+.contact-link::before {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: var(--ink);
+  content: "";
+  transform: scaleY(0);
+  transform-origin: bottom;
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.contact-link:hover,
+.contact-link:focus-visible {
+  background: rgb(226 218 202 / 0.42);
+  transform: translate3d(5px, 0, 0);
+}
+.contact-link:hover::before,
+.contact-link:focus-visible::before {
+  transform: scaleY(1);
+}
+.contact-icon {
+  color: var(--ink);
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.contact-link:hover .contact-icon,
+.contact-link:focus-visible .contact-icon {
+  transform: translate3d(3px, 0, 0) rotate(-5deg);
+}
+.contact-arrow {
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.contact-link:hover .contact-arrow,
+.contact-link:focus-visible .contact-arrow {
+  transform: translate3d(4px, 0, 0);
+}
 .image-zoom {
   transition: transform 320ms ease-out;
   will-change: transform;
@@ -254,6 +369,40 @@ button {
 .hero-section {
   height: 100vh;
   height: 100svh;
+}
+.hero-depth {
+  --hero-pointer-x: 50%;
+  --hero-pointer-y: 32%;
+  background:
+    radial-gradient(34rem circle at var(--hero-pointer-x) var(--hero-pointer-y), rgb(77 96 180 / 0.1), transparent 56%),
+    radial-gradient(28rem circle at 10% 88%, rgb(210 166 88 / 0.11), transparent 60%);
+}
+.hero-orb {
+  position: absolute;
+  z-index: 0;
+  border: 1px solid rgb(47 37 25 / 0.1);
+  border-radius: 999px;
+  pointer-events: none;
+  animation: hero-drift 12s ease-in-out infinite;
+  will-change: transform;
+}
+.hero-orb-one {
+  top: 20%;
+  right: 27%;
+  width: clamp(4rem, 9vw, 8rem);
+  height: clamp(4rem, 9vw, 8rem);
+}
+.hero-orb-two {
+  right: 6%;
+  bottom: 12%;
+  width: clamp(2.5rem, 5vw, 5rem);
+  height: clamp(2.5rem, 5vw, 5rem);
+  animation-delay: -4s;
+}
+@keyframes hero-drift {
+  0%,
+  100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(0, -10px, 0); }
 }
 .hero-shell {
   position: relative;
@@ -332,7 +481,7 @@ button {
 
 /* Phone-only hero composition. The visual artwork gets a dedicated band above
    the details, rather than sharing the same space as readable content. */
-@media (max-width: 767px) {
+@media (max-width: 768px) {
   .hero-section {
     height: auto;
     min-height: 100svh;
@@ -340,70 +489,115 @@ button {
   .hero-shell {
     display: block;
     min-height: 100svh;
-    padding: 1.5rem 1.25rem;
+    padding: 1.5rem 1.25rem 0;
+  }
+  .hero-intro > .label-mono {
+    display: none;
+  }
+  .hero-greeting {
+    position: static;
+    width: auto;
+    max-width: none;
+    text-align: center;
+    transform: none;
   }
   .hero-name {
     font-size: clamp(4rem, 20vw, 5.5rem);
-  }
-  .hero-greeting {
-    max-width: 90vw;
+    margin-bottom: 1.5rem;
   }
   .hero-visuals {
-    top: 9.25rem;
-    right: 0;
-    bottom: auto;
-    left: 0;
+    position: static;
+    inset: auto;
     width: 100%;
-    height: 15rem;
+    height: auto;
+    transform: none;
+    margin: 0 0 1.5rem;
   }
   .hero-hand {
-    top: 0;
-    right: auto;
-    left: -0.75rem;
-    width: clamp(5.5rem, 23vw, 7.5rem);
-    z-index: 1;
+    display: none;
   }
   .hero-portrait {
-    top: 2.5rem;
-    right: 8%;
-    bottom: auto;
-    width: clamp(8rem, 34vw, 10rem);
-    z-index: 2;
+    position: static;
+    inset: auto;
+    width: clamp(55vw, 60vw, 65vw);
+    margin: 0 auto;
+    transform: none;
   }
   .hero-portrait .rule-t {
-    padding: 0.45rem;
+    position: relative;
+    overflow: hidden;
+    border: 0;
+    border-radius: 1.5rem;
+    background: var(--muted);
+    padding: 0;
+    box-shadow: 0 14px 30px rgb(47 37 25 / 0.14);
   }
   .hero-photo {
-    height: clamp(10rem, 42vw, 12rem);
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: none;
+    aspect-ratio: auto;
+    object-fit: cover;
+  }
+  .hero-portrait .rule-t > .label-mono {
+    position: absolute;
+    right: 0.65rem;
+    bottom: 0.65rem;
+    border-radius: 999px;
+    background: rgb(250 247 238 / 0.92);
+    padding: 0.35rem 0.5rem;
+    color: var(--ink);
+    font-size: 0.56rem;
+    box-shadow: 0 2px 8px rgb(47 37 25 / 0.12);
+  }
+  .hero-portrait .rule-t > .label-mono span:first-child {
+    display: none;
+  }
+  .hero-portrait .rule-t > .label-mono span:last-child {
+    font-size: 0;
+  }
+  .hero-portrait .rule-t > .label-mono span:last-child::after {
+    content: "Peace 01";
+    font-size: 0.56rem;
   }
   .hero-welcome {
     display: none;
   }
   .hero-copy {
     max-width: none;
-    margin-top: 25rem;
-    padding: 0 1rem;
+    margin-top: 0;
+    padding: 0;
+    transform: none;
   }
   .hero-facts {
-    gap: 0.75rem 1rem;
+    grid-template-columns: 1fr;
+    gap: 0.25rem;
   }
   .hero-facts > p {
     min-width: 0;
+    margin-bottom: 1rem;
+  }
+  .hero-facts > p:last-child {
+    margin-bottom: 0;
   }
   .hero-actions {
     margin-top: 1.5rem;
     gap: 0.625rem;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .hero-actions > a {
     display: inline-flex;
-    flex: 1 1 100%;
+    min-width: 0;
+    flex: none;
     align-items: center;
     justify-content: center;
     min-height: 2.75rem;
     text-align: center;
   }
   .hero-actions > a:last-child {
-    flex-basis: 100%;
+    grid-column: 1 / -1;
   }
   .hero-skills {
     position: static;
@@ -416,7 +610,7 @@ button {
 
 /* Tablet gets its own composition: centred copy with balanced side artwork,
    not a scaled-up phone layout. Nothing in this block applies at desktop. */
-@media (min-width: 768px) and (max-width: 1199px) {
+@media (min-width: 769px) and (max-width: 1199px) {
   .hero-section {
     height: auto;
     min-height: max(100svh, 48rem);
