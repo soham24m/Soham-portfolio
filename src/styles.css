@@ -330,7 +330,9 @@ button {
   justify-content: center;
 }
 
-@media (max-width: 639px) {
+/* Phone-only hero composition. The visual artwork gets a dedicated band above
+   the details, rather than sharing the same space as readable content. */
+@media (max-width: 767px) {
   .hero-section {
     height: auto;
     min-height: 100svh;
@@ -341,41 +343,45 @@ button {
     padding: 1.5rem 1.25rem;
   }
   .hero-name {
-    font-size: clamp(4.25rem, 22vw, 5.75rem);
+    font-size: clamp(4rem, 20vw, 5.5rem);
+  }
+  .hero-greeting {
+    max-width: 90vw;
   }
   .hero-visuals {
-    top: 8.25rem;
+    top: 9.25rem;
     right: 0;
     bottom: auto;
-    left: auto;
-    width: 7.5rem;
+    left: 0;
+    width: 100%;
+    height: 15rem;
   }
   .hero-hand {
     top: 0;
     right: auto;
-    left: -1.5rem;
-    width: 6.5rem;
+    left: -0.75rem;
+    width: clamp(5.5rem, 23vw, 7.5rem);
+    z-index: 1;
   }
   .hero-portrait {
-    top: 6rem;
-    right: 0;
+    top: 2.5rem;
+    right: 8%;
     bottom: auto;
-    width: 6.5rem;
+    width: clamp(8rem, 34vw, 10rem);
+    z-index: 2;
   }
   .hero-portrait .rule-t {
-    padding: 0.35rem;
+    padding: 0.45rem;
   }
   .hero-photo {
-    height: 9.5rem;
+    height: clamp(10rem, 42vw, 12rem);
   }
   .hero-welcome {
     display: none;
   }
   .hero-copy {
     max-width: none;
-    /* The portrait is absolutely positioned on phones. Reserve its full visual
-       band before the copy so it cannot sit behind readable content. */
-    margin-top: clamp(14rem, 36svh, 18rem);
+    margin-top: 25rem;
     padding: 0 1rem;
   }
   .hero-facts {
@@ -390,7 +396,7 @@ button {
   }
   .hero-actions > a {
     display: inline-flex;
-    flex: 1 1 calc(50% - 0.3125rem);
+    flex: 1 1 100%;
     align-items: center;
     justify-content: center;
     min-height: 2.75rem;
@@ -408,9 +414,55 @@ button {
   }
 }
 
-@media (min-width: 640px) and (max-width: 1023px) {
+/* Tablet gets its own composition: centred copy with balanced side artwork,
+   not a scaled-up phone layout. Nothing in this block applies at desktop. */
+@media (min-width: 768px) and (max-width: 1199px) {
+  .hero-section {
+    height: auto;
+    min-height: max(100svh, 48rem);
+  }
+  .hero-shell {
+    min-height: max(100svh, 48rem);
+  }
+  .hero-greeting {
+    max-width: 58vw;
+  }
+  .hero-name {
+    font-size: clamp(6rem, 11vw, 8.5rem);
+  }
+  .hero-hand {
+    top: 15%;
+    left: -1.25rem;
+    width: clamp(10rem, 18vw, 14rem);
+  }
+  .hero-portrait {
+    top: calc(15% + 4.5rem);
+    right: 1rem;
+    width: clamp(11rem, 19vw, 15rem);
+  }
+  .hero-photo {
+    height: min(37vh, 20rem);
+  }
   .hero-copy {
-    max-width: 60%;
+    align-self: center;
+    max-width: 50%;
+  }
+  .hero-actions > a {
+    flex: 1 1 calc(50% - 0.5rem);
+    min-height: 3rem;
+    text-align: center;
+  }
+  .hero-actions > a:last-child {
+    flex-basis: 100%;
+  }
+  header > div:first-child {
+    gap: 1rem;
+  }
+  header > div:first-child nav {
+    gap: 1rem;
+  }
+  header > div:first-child > a:last-child {
+    display: none;
   }
 }
 
