@@ -373,7 +373,9 @@ button {
   }
   .hero-copy {
     max-width: none;
-    margin-top: clamp(4.5rem, 12vh, 6rem);
+    /* The portrait is absolutely positioned on phones. Reserve its full visual
+       band before the copy so it cannot sit behind readable content. */
+    margin-top: clamp(14rem, 36svh, 18rem);
     padding: 0 1rem;
   }
   .hero-facts {
@@ -387,7 +389,11 @@ button {
     gap: 0.625rem;
   }
   .hero-actions > a {
+    display: inline-flex;
     flex: 1 1 calc(50% - 0.3125rem);
+    align-items: center;
+    justify-content: center;
+    min-height: 2.75rem;
     text-align: center;
   }
   .hero-actions > a:last-child {
