@@ -127,29 +127,62 @@ body {
   transform: none;
 }
 .section-motion {
-  /* Sections are always legible; motion is a small positional cue, never a
-     visibility gate. */
+  /* GSAP's single gallery timeline owns the transform; sections stay fully
+     visible at every point in the scroll. */
   opacity: 1;
   filter: none;
-  transform: perspective(1200px) translate3d(0, 14px, 0) scale(0.998) rotateX(0.25deg);
-  transition:
-    transform 560ms cubic-bezier(0.16, 1, 0.3, 1);
-  will-change: opacity, filter, transform;
+  transform: translate3d(0, 0, 0);
+  will-change: transform;
 }
-.section-motion.is-entering,
-.section-motion.is-visible {
-  opacity: 1;
-  filter: none;
-  transform: perspective(1200px) translate3d(0, 0, 0) scale(1) rotateX(0);
-}
-.section-motion.is-visible {
-  will-change: auto;
-}
-.section-motion.is-exiting {
-  opacity: 1;
-  filter: none;
-  transform: perspective(1200px) translate3d(0, -10px, 0) scale(0.998) rotateX(-0.2deg);
-  will-change: opacity, filter, transform;
+.gallery-reveal { will-change: clip-path; }
+.gallery-cursor { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  body,
+  a,
+  button { cursor: none; }
+  .gallery-cursor {
+    display: block;
+    position: fixed;
+    top: -0.7rem;
+    left: -0.7rem;
+    z-index: 100;
+    width: 1.4rem;
+    height: 1.4rem;
+    border: 1px solid var(--ink);
+    border-radius: 999px;
+    background: rgb(250 247 238 / 0.55);
+    pointer-events: none;
+    transform: translate3d(-100px, -100px, 0);
+    transition: width 180ms ease, height 180ms ease, background-color 180ms ease, border-color 180ms ease;
+    will-change: transform;
+  }
+  .gallery-cursor.is-active {
+    width: 3.25rem;
+    height: 3.25rem;
+    border-color: var(--primary);
+    background: rgb(250 247 238 / 0.9);
+  }
+  .gallery-cursor.is-pressed {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+  .gallery-cursor::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    max-width: 8rem;
+    overflow: hidden;
+    color: var(--ink);
+    content: attr(data-label);
+    font-family: var(--font-mono);
+    font-size: 0.5rem;
+    letter-spacing: 0.07em;
+    text-align: center;
+    text-overflow: ellipsis;
+    text-transform: uppercase;
+    white-space: nowrap;
+    transform: translate(-50%, -50%);
+  }
 }
 @keyframes hero-enter {
   from {
@@ -358,6 +391,19 @@ body {
 .image-zoom:hover {
   transform: scale(1.025);
 }
+.journey-photo-frame {
+  transition: transform 360ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 360ms ease;
+}
+.journey-photo-frame:hover {
+  transform: translate3d(0, -4px, 0);
+  box-shadow: 0 14px 28px rgb(47 37 25 / 0.1);
+}
+.journey-milestones-image {
+  transition: transform 500ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.journey-photo-frame:hover .journey-milestones-image {
+  transform: scale(1.025);
+}
 a,
 button {
   transition:
@@ -450,12 +496,16 @@ button {
   top: 13%;
   left: clamp(-4rem, -2vw, -1rem);
   width: clamp(13rem, 21vw, 22rem);
+  transform: translate3d(var(--hero-hand-x, 0px), var(--hero-hand-y, 0px), 0);
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .hero-portrait {
   top: calc(13% + 6rem);
   right: clamp(-1rem, 2vw, 2rem);
   bottom: auto;
   width: clamp(13rem, 21vw, 22rem);
+  transform: translate3d(var(--hero-portrait-x, 0px), var(--hero-portrait-y, 0px), 0);
+  transition: transform 280ms cubic-bezier(0.16, 1, 0.3, 1);
 }
 .hero-photo {
   height: min(43vh, 28rem);

@@ -1,6 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { Github, Linkedin, Mail, Phone } from "lucide-react";
+import Lenis from "lenis";
+import { gsap } from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
 import heroPhoto from "@/assets/portfolio/hero-photo.png";
 import thinkingPhoto from "@/assets/portfolio/thinking-photo.png";
 import closingPhoto from "@/assets/portfolio/closing-portrait.png";
@@ -10,6 +13,7 @@ import questionMark from "@/assets/portfolio/question.png";
 import pointHand from "@/assets/portfolio/point-hand.png";
 
 import journeyTitle from "@/assets/portfolio/journey-title.png";
+import journeyMilestones from "@/assets/portfolio/journey-milestones.png";
 import skillsBust from "@/assets/portfolio/skills-bust.png";
 
 export const Route = createFileRoute("/")({
@@ -35,66 +39,94 @@ function useReveal<T extends HTMLElement>() {
   return { ref, shown };
 }
 
-function useSectionMotion<T extends HTMLElement>() {
-  const ref = useRef<T | null>(null);
-  const [phase, setPhase] = useState<"" | "is-entering" | "is-visible" | "is-exiting">("");
-
+function useGalleryMotion(root: React.RefObject<HTMLElement | null>) {
   useEffect(() => {
-    const element = ref.current;
-    if (!element || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setPhase("is-visible");
-      return;
-    }
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches || !root.current) return;
 
-    let entranceTimer: number | undefined;
-    let hasEntered = false;
+    gsap.registerPlugin(ScrollTrigger);
+    const lenis = new Lenis({ lerp: 0.085, smoothWheel: true, syncTouch: false });
+    const update = (time: number) => lenis.raf(time * 1000);
+    lenis.on("scroll", ScrollTrigger.update);
+    gsap.ticker.add(update);
+    gsap.ticker.lagSmoothing(0);
 
-    const enter = () => {
-      if (hasEntered) return;
-      hasEntered = true;
-      setPhase("is-entering");
-      entranceTimer = window.setTimeout(() => setPhase("is-visible"), 360);
-    };
+    const context = gsap.context(() => {
+      const sections = gsap.utils.toArray<HTMLElement>(".section-motion");
+      const gallery = gsap.timeline({
+        scrollTrigger: {
+          trigger: root.current,
+          start: "top top",
+          end: "bottom bottom",
+          scrub: 0.7,
+          invalidateOnRefresh: true,
+        },
+      });
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry.isIntersecting) return;
-        enter();
-        observer.disconnect();
-      },
-      { rootMargin: "0px 0px -65%", threshold: 0.01 },
-    );
-    observer.observe(element);
+      sections.forEach((section, index) => {
+        const direction = index % 2 === 0 ? 1 : -1;
+        gallery.fromTo(
+          section,
+          { y: 20, rotateX: 0.35 * direction, rotateZ: 0.08 * direction, transformPerspective: 1400 },
+          { y: -12, rotateX: -0.2 * direction, rotateZ: -0.05 * direction, ease: "none" },
+          index,
+        );
+      });
 
-    let frame = 0;
-    const updateExit = () => {
-      frame = 0;
-      if (!hasEntered) return;
-      const { bottom, top } = element.getBoundingClientRect();
-      const exitZone = Math.min(window.innerHeight * 0.16, 140);
-
-      // Exit only when the final sliver of a section is leaving the viewport.
-      // The reading area remains static for the entire time it is on screen.
-      if (bottom > 0 && bottom <= exitZone) {
-        setPhase("is-exiting");
-      } else if (top < window.innerHeight && bottom > exitZone) {
-        setPhase("is-visible");
-      }
-    };
-    const onScroll = () => {
-      if (!frame) frame = window.requestAnimationFrame(updateExit);
-    };
-    window.addEventListener("scroll", onScroll, { passive: true });
+      gsap.utils.toArray<HTMLElement>(".gallery-reveal").forEach((element) => {
+        gsap.fromTo(
+          element,
+          { clipPath: "inset(0 0 2px 0)" },
+          {
+            clipPath: "inset(0 0 0% 0)",
+            ease: "none",
+            scrollTrigger: { trigger: element, start: "top 86%", end: "top 52%", scrub: 0.55 },
+          },
+        );
+      });
+    }, root);
 
     return () => {
-      observer.disconnect();
-      window.removeEventListener("scroll", onScroll);
-      if (frame) window.cancelAnimationFrame(frame);
-      if (entranceTimer) window.clearTimeout(entranceTimer);
+      context.revert();
+      gsap.ticker.remove(update);
+      lenis.destroy();
     };
-  }, []);
+  }, [root]);
+}
 
-  return { ref, phase };
+function useCustomCursor(cursor: React.RefObject<HTMLDivElement | null>) {
+  useEffect(() => {
+    if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches || !cursor.current) return;
+
+    const element = cursor.current;
+    let frame = 0;
+    let x = -100;
+    let y = -100;
+    const render = () => {
+      frame = 0;
+      element.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    };
+    const onMove = (event: PointerEvent) => {
+      x = event.clientX;
+      y = event.clientY;
+      if (!frame) frame = window.requestAnimationFrame(render);
+      const target = event.target instanceof Element ? event.target : null;
+      const project = target?.closest(".project-card")?.querySelector("h3")?.textContent;
+      const interactive = target?.closest("a, button, .project-card");
+      element.classList.toggle("is-active", Boolean(interactive));
+      element.dataset.label = project || (interactive ? "Explore" : "");
+    };
+    const onDown = () => element.classList.add("is-pressed");
+    const onUp = () => element.classList.remove("is-pressed");
+    window.addEventListener("pointermove", onMove, { passive: true });
+    window.addEventListener("pointerdown", onDown, { passive: true });
+    window.addEventListener("pointerup", onUp, { passive: true });
+    return () => {
+      if (frame) window.cancelAnimationFrame(frame);
+      window.removeEventListener("pointermove", onMove);
+      window.removeEventListener("pointerdown", onDown);
+      window.removeEventListener("pointerup", onUp);
+    };
+  }, [cursor]);
 }
 
 function MotionSection({
@@ -106,9 +138,8 @@ function MotionSection({
   className?: string;
   id?: string;
 }) {
-  const { ref, phase } = useSectionMotion<HTMLElement>();
   return (
-    <section ref={ref} id={id} className={`section-motion ${phase} ${className}`}>
+    <section id={id} className={`section-motion ${className}`}>
       {children}
     </section>
   );
@@ -166,8 +197,13 @@ function DashedArrow({ className = "", d }: { className?: string; d: string }) {
 // ————————————————————— page —————————————————————
 
 function Portfolio() {
+  const root = useRef<HTMLElement | null>(null);
+  const cursor = useRef<HTMLDivElement | null>(null);
+  useGalleryMotion(root);
+  useCustomCursor(cursor);
   return (
-    <main className="min-h-screen bg-background text-ink">
+    <main ref={root} className="gallery-root min-h-screen bg-background text-ink">
+      <div ref={cursor} className="gallery-cursor" aria-hidden />
       <TopBar />
       <Hero />
       <SayHi />
@@ -254,13 +290,23 @@ function Hero() {
   const setHeroPointer = (event: React.PointerEvent<HTMLElement>) => {
     if (event.pointerType === "touch" || !heroRef.current) return;
     const bounds = heroRef.current.getBoundingClientRect();
-    heroRef.current.style.setProperty("--hero-pointer-x", `${event.clientX - bounds.left}px`);
-    heroRef.current.style.setProperty("--hero-pointer-y", `${event.clientY - bounds.top}px`);
+    const pointerX = event.clientX - bounds.left;
+    const pointerY = event.clientY - bounds.top;
+    heroRef.current.style.setProperty("--hero-pointer-x", `${pointerX}px`);
+    heroRef.current.style.setProperty("--hero-pointer-y", `${pointerY}px`);
+    heroRef.current.style.setProperty("--hero-hand-x", `${(pointerX / bounds.width - 0.5) * -12}px`);
+    heroRef.current.style.setProperty("--hero-hand-y", `${(pointerY / bounds.height - 0.5) * -8}px`);
+    heroRef.current.style.setProperty("--hero-portrait-x", `${(pointerX / bounds.width - 0.5) * 8}px`);
+    heroRef.current.style.setProperty("--hero-portrait-y", `${(pointerY / bounds.height - 0.5) * 6}px`);
   };
 
   const resetHeroPointer = () => {
     heroRef.current?.style.removeProperty("--hero-pointer-x");
     heroRef.current?.style.removeProperty("--hero-pointer-y");
+    heroRef.current?.style.removeProperty("--hero-hand-x");
+    heroRef.current?.style.removeProperty("--hero-hand-y");
+    heroRef.current?.style.removeProperty("--hero-portrait-x");
+    heroRef.current?.style.removeProperty("--hero-portrait-y");
   };
 
   return (
@@ -597,7 +643,7 @@ function Projects() {
           </div>
         </div>
 
-        <div className="rule-t mt-12 grid grid-cols-1 md:grid-cols-2">
+        <div className="gallery-reveal rule-t mt-12 grid grid-cols-1 md:grid-cols-2">
           {projects.map((p, i) => {
             const isPlaceholder = p.stack.length === 0;
             return (
@@ -684,11 +730,26 @@ function Journey() {
     <MotionSection id="journey" className="rule-b relative overflow-hidden">
       <div className="mx-auto max-w-[1400px] px-6 py-20 sm:px-10">
         <SectionLabel n="04 / Timeline">Chronology</SectionLabel>
-        <img
-          src={journeyTitle}
-          alt="My journey so far"
-          className="mt-8 block h-auto w-full max-w-3xl"
-        />
+        <div className="mt-8 grid items-end gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(18rem,0.62fr)]">
+          <img
+            src={journeyTitle}
+            alt="My journey so far"
+            className="block h-auto w-full max-w-3xl"
+          />
+          <figure className="journey-photo-frame border border-rule bg-muted/40 p-3">
+            <div className="overflow-hidden border border-rule bg-paper">
+              <img
+                src={journeyMilestones}
+                alt="Soham's Head Boy and TEDx milestones"
+                className="journey-milestones-image block h-auto w-full"
+              />
+            </div>
+            <figcaption className="mt-3 flex items-center justify-between gap-3 label-mono">
+              <span>Fig. 04</span>
+              <span>Leadership → TEDx</span>
+            </figcaption>
+          </figure>
+        </div>
 
         <ol className="rule-t mt-16 max-w-4xl">
           {items.map((it, i) => (
