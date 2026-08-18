@@ -73,21 +73,21 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Soham Siddhartha Mishra — AI Engineer & Full-Stack Developer" },
+      { title: "Soham Siddhartha Mishra — AI Engineer · Full-Stack Developer · Founder" },
       {
         name: "description",
         content:
-          "Portfolio of Soham Siddhartha Mishra — Computer Science student, AI engineer, and full-stack developer. Open to work.",
+          "Portfolio of Soham Siddhartha Mishra — AI engineer, full-stack developer, and founder of DIKE India. Open to work.",
       },
       { name: "author", content: "Soham Siddhartha Mishra" },
       {
         property: "og:title",
-        content: "Soham Siddhartha Mishra — AI Engineer & Full-Stack Developer",
+        content: "Soham Siddhartha Mishra — AI Engineer · Full-Stack Developer · Founder",
       },
       {
         property: "og:description",
         content:
-          "Portfolio of Soham Siddhartha Mishra — AI engineer, full-stack developer, Technical Lead at GeeksForGeeks SRMIST.",
+          "Portfolio of Soham Siddhartha Mishra — AI engineer, full-stack developer, founder of DIKE India, Technical Lead at GeeksForGeeks SRMIST.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

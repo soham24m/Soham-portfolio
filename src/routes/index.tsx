@@ -15,6 +15,7 @@ import pointHand from "@/assets/portfolio/point-hand.png";
 import journeyTitle from "@/assets/portfolio/journey-title.png";
 import journeyMilestones from "@/assets/portfolio/journey-milestones.png";
 import skillsBust from "@/assets/portfolio/skills-bust.png";
+import dikeLogo from "@/assets/portfolio/dike-logo.png";
 
 export const Route = createFileRoute("/")({
   component: Portfolio,
@@ -386,8 +387,8 @@ function Hero() {
             <div className="hero-facts grid max-w-2xl grid-cols-[auto_1fr] gap-x-6 gap-y-4 sm:gap-x-10">
               <div className="label-mono">Role</div>
               <p className="font-display text-2xl leading-tight sm:text-3xl">
-                AI Engineer <span className="text-muted-foreground">&amp;</span> Full-Stack
-                Developer.
+                AI Engineer <span className="text-muted-foreground">·</span> Full-Stack
+                Developer <span className="text-muted-foreground">·</span> Founder.
               </p>
               <div className="label-mono">Status</div>
               <p className="text-lg">
@@ -539,8 +540,8 @@ function WhyHire() {
     },
     {
       k: "05",
-      h: "Concept → cloud, owned.",
-      b: "Comfortable taking a rough idea through spec, prototype, Dockerised deploy on cloud infra, and iteration on real usage. I move fast on unfamiliar stacks and leave documentation behind me.",
+      h: "Founder of DIKE India & product thinker.",
+      b: "Founder of DIKE India, a LegalTech venture focused on building a modern legal repository and knowledge infrastructure for lawyers and law firms. Comfortable taking ideas through spec, full-stack prototype, cloud deploy, and real-world iteration.",
     },
   ];
   return (
@@ -597,39 +598,38 @@ function WhyHire() {
 function Projects() {
   const projects = [
     {
-      title: "Splitr",
-      year: "2025",
-      tag: "Systems / C++",
-      desc: "Command-line expense splitter. Tracks balances across n users and computes the minimum-transaction settlement using efficient data structures and OOP design.",
-      stack: ["C++", "STL", "OOP"],
-      links: [{ label: "GitHub", href: "#" }],
-    },
-    {
       title: "Dance of the Dragons",
       year: "2025",
-      tag: "Web / R3F",
-      desc: "Immersive fantasy-themed web experience: cinematic scroll transitions, interactive storytelling, and a component-based architecture optimised for premium feel.",
-      stack: ["React", "TypeScript", "Tailwind", "Framer Motion", "Three.js"],
-      links: [
-        { label: "GitHub", href: "#" },
-        { label: "Live", href: "#" },
-      ],
+      tag: "Interactive / Web3D",
+      desc: "An immersive interactive fantasy web experience controlled through gesture and voice. Users interact with a playable dragon through webcam-based gestures and voice commands, with cinematic visuals, synthesized sound, animated combat, and interactive storytelling.",
+      stack: ["React", "TypeScript", "Three.js", "Framer Motion", "Tailwind CSS", "Web APIs"],
+      links: [{ label: "Live Experience", href: "https://dance-of-the-dragons-v2.vercel.app" }],
     },
     {
-      title: "In progress",
-      year: "—",
-      tag: "Reserved",
-      desc: "// TODO: add project (title, description, tech stack, links).",
-      stack: [],
-      links: [],
+      title: "Splitr",
+      year: "2025",
+      tag: "Full-Stack / FinTech",
+      desc: "A full-stack expense tracking and bill-splitting platform built specifically around student life at SRM Kattankulathur. It allows users to create groups, track shared expenses, split bills, manage settlements, budgets, trips, and spending reports.",
+      stack: ["React", "TypeScript", "JavaScript", "Backend/API integration", "Database", "Authentication"],
+      links: [{ label: "Live Project", href: "https://splitr-teal.vercel.app" }],
     },
     {
-      title: "In progress",
-      year: "—",
-      tag: "Reserved",
-      desc: "// TODO: add project (title, description, tech stack, links).",
-      stack: [],
+      title: "BC Copilot",
+      year: "2025",
+      tag: "AI & Automation",
+      desc: "An AI and automation command center built around Bonkers Corner, designed to demonstrate how AI can support operational workflows, decision-making, and business processes.",
+      stack: ["React", "TypeScript", "AI / LLM", "Automation", "REST APIs"],
+      links: [{ label: "Live Project", href: "https://bonkers-command-center.vercel.app" }],
+    },
+    {
+      title: "DIKE India",
+      year: "2025 → Present",
+      tag: "Founder / LegalTech",
+      badge: "Founder, DIKE India",
+      desc: "DIKE India is a LegalTech company I founded, focused on building a digital legal repository for lawyers and law firms to store, organise, search, and retrieve legal documents and knowledge more efficiently.",
+      stack: ["LegalTech", "Document Repository", "Knowledge Infra", "Search & Retrieval"],
       links: [],
+      logo: dikeLogo,
     },
   ];
 
@@ -661,19 +661,36 @@ function Projects() {
 
         <div className="gallery-reveal rule-t mt-12 grid grid-cols-1 md:grid-cols-2">
           {projects.map((p, i) => {
-            const isPlaceholder = p.stack.length === 0;
             return (
               <Reveal key={i} delay={i * 80}>
                 <article
                   className={`rule-b project-card group relative flex h-full flex-col p-6 sm:p-8 ${
                     i % 2 === 0 ? "md:border-r" : ""
-                  } ${isPlaceholder ? "bg-muted/30" : "hover:bg-muted/40"}`}
+                  } hover:bg-muted/40`}
                 >
                   <div className="flex items-center justify-between label-mono">
                     <span>{p.tag}</span>
                     <span>{p.year}</span>
                   </div>
-                  <h3 className="display-serif mt-6 text-4xl sm:text-5xl">{p.title}</h3>
+
+                  {p.logo && (
+                    <div className="mt-5 mb-1 flex flex-wrap items-center justify-between gap-3">
+                      <div className="flex h-14 w-auto max-w-[190px] items-center justify-center overflow-hidden border border-rule bg-ink px-3 py-2 rounded-sm shadow-sm">
+                        <img
+                          src={p.logo}
+                          alt={`${p.title} Logo`}
+                          className="h-full w-auto object-contain"
+                        />
+                      </div>
+                      {p.badge && (
+                        <span className="label-mono text-primary font-medium border border-primary/20 bg-primary/5 px-2.5 py-1 rounded-sm">
+                          {p.badge}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <h3 className="display-serif mt-5 text-4xl sm:text-5xl">{p.title}</h3>
                   <p className="mt-4 max-w-md text-muted-foreground">{p.desc}</p>
                   {p.stack.length > 0 && (
                     <ul className="mt-6 flex flex-wrap gap-2">
@@ -684,17 +701,24 @@ function Projects() {
                       ))}
                     </ul>
                   )}
-                  {p.links.length > 0 && (
+                  {p.links.length > 0 ? (
                     <div className="mt-8 flex gap-4">
                       {p.links.map((l) => (
                         <a
                           key={l.label}
                           href={l.href}
-                          className="magnetic-link label-mono text-primary"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="magnetic-link label-mono text-primary hover:underline"
                         >
                           {l.label} →
                         </a>
                       ))}
+                    </div>
+                  ) : (
+                    <div className="mt-8 flex items-center gap-2 label-mono text-muted-foreground">
+                      <span className="inline-block h-2 w-2 rounded-full bg-primary" />
+                      <span>Company / Founder Project</span>
                     </div>
                   )}
                 </article>
@@ -710,6 +734,11 @@ function Projects() {
 // —————— Journey ——————
 function Journey() {
   const items = [
+    {
+      date: "2024 → present",
+      h: "Founder, DIKE India",
+      b: "Founded DIKE India, a LegalTech venture building a modern digital legal repository and knowledge infrastructure for lawyers and law firms.",
+    },
     {
       date: "2026",
       h: "Machine Learning Specialization, Coursera — completed",
