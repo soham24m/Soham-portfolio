@@ -623,7 +623,7 @@ function Projects() {
     },
     {
       title: "DIKE India",
-      year: "2025 → Present",
+      year: "2026 → Present",
       tag: "Founder / LegalTech",
       badge: "Founder, DIKE India",
       desc: "DIKE India is a LegalTech company I founded, focused on building a digital legal repository for lawyers and law firms to store, organise, search, and retrieve legal documents and knowledge more efficiently.",
@@ -735,7 +735,7 @@ function Projects() {
 function Journey() {
   const items = [
     {
-      date: "2024 → present",
+      date: "2026 → present",
       h: "Founder, DIKE India",
       b: "Founded DIKE India, a LegalTech venture building a modern digital legal repository and knowledge infrastructure for lawyers and law firms.",
     },
